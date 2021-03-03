@@ -9,8 +9,11 @@
 #include <QString>
 #include <QTextStream>
 
+#include "exceptions.h"
+
 MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
+    ui->CommandInput->setFocus();
     connect(ui->LoadButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::load));
     connect(ui->RunButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::run));
     connect(ui->ClearButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::clear));
@@ -26,40 +29,37 @@ void MainWindow::load() {
     if (filename.isEmpty()) {
         return;
     }
-    QFile file(filename);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return;
-    }
-
-    QTextStream in(&file);
-    QString source;
-    while (!in.atEnd()) {
-        source += in.readLine() + "\n";
-    }
-    ui->CodeDisplay->setText(source);
-    file.close();
+    program.load(filename);
+    ui->CodeDisplay->setText(program.text());
 }
 
 void MainWindow::clear() {
+    program.clear();
     ui->CodeDisplay->clear();
     ui->OutputDisplay->clear();
     ui->ASTDisplay->clear();
 }
 
 void MainWindow::showHelp() {
-    QMessageBox msgBox;
-    msgBox.setWindowTitle("Help");
-    QString helpText = "Commands:\n\
+    const QString helpText = "\
             RUN: Run the program\n\
             LOAD: Load program from a source code file\n\
             CLEAR: Clear current program\n\
             HELP: Show this help text\n";
-    msgBox.setText(helpText);
+    QMessageBox msgBox;
+    msgBox.setIcon(QMessageBox::Information);
+    msgBox.setWindowTitle("Help");
+    msgBox.setText("Commands:");
+    msgBox.setInformativeText(helpText);
     msgBox.exec();
 }
 
 void MainWindow::executeCommand() {
     QString command = ui->CommandInput->text();
+    if (command.isEmpty()) {
+        return;
+    }
+
     if (command == "RUN") {
         run();
     } else if (command == "LOAD") {
@@ -71,7 +71,12 @@ void MainWindow::executeCommand() {
     } else if (command == "QUIT") {
         QApplication::exit(0);
     } else {
-        // executeStatement(command);
+        try {
+            program.edit(command);
+        } catch (const Exception& error) {
+            QMessageBox::critical(this, "Error", error.what());
+        }
+        ui->CodeDisplay->setText(program.text());
     }
     ui->CommandInput->clear();
 }
