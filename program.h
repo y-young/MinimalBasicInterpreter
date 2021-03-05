@@ -28,6 +28,7 @@ class Program: public QWidget {
     void load(QString filename);
     void run();
     void start();
+    QString printAst() const;
     void clear();
     const QString text() const;
     PseudoIO& io();

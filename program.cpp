@@ -44,20 +44,28 @@ void Program::load(QString filename) {
 
 void Program::stepExecute() {
     // execute single statement
-    qDebug() << context.pc.key();
+    int id = context.pc.key();
+    qDebug() << id;
     try {
-        Statement::parse(context.pc.value())->execute(context);
+        const Statement* instruction = Statement::parse(context.pc.value());
+        instruction->execute(context);
     } catch (const Exception& error) {
         QMessageBox::critical(this, "Error", error.what());
     }
     ++context.pc;
     if (context.pc == data.constEnd()) {
-        context.halt = true;
+        context.status = INTERRUPT;
     }
 }
 
 void Program::run() {
-    while (!context.halt) {
+    while (context.status != INTERRUPT && context.status != HALT) {
+        // handle goto statements, find corresponding const_iterator
+        if (context.status == GOTO) {
+            context.pc = data.find(context.gotoDst);
+            context.status = OK;
+            context.gotoDst = 0;
+        }
         stepExecute();
     }
 }
@@ -73,8 +81,19 @@ void Program::start() {
 
 void Program::input(QString identifier, int value) {
     context.symbols.setValue(identifier, value);
-    context.halt = false;
+    context.status = OK;
     run();
+}
+
+QString Program::printAst() const {
+    QMap<int, QString>::const_iterator i;
+    QString ast;
+    Statement const* instruction;
+    for (i = data.constBegin(); i != data.constEnd(); ++i) {
+        instruction = Statement::parse(i.value());
+        ast += QString("%1 %2\n").arg(i.key()).arg(instruction->ast());
+    }
+    return ast;
 }
 
 void Program::clear() {

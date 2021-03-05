@@ -21,6 +21,7 @@ void MainWindow::run() {
     ui->ASTDisplay->clear();
     try {
         program->start();
+        ui->ASTDisplay->setText(program->printAst());
     } catch (const Exception& error) {
         QMessageBox::critical(this, "Error", error.what());
     }
@@ -33,6 +34,8 @@ void MainWindow::load() {
     }
     program->load(filename);
     ui->CodeDisplay->setText(program->text());
+    ui->OutputDisplay->clear();
+    ui->ASTDisplay->clear();
 }
 
 void MainWindow::clear() {
@@ -62,8 +65,6 @@ void MainWindow::executeCommand() {
         return;
     }
 
-    qDebug() << Expression::parse(command)->toString();
-    return;
     ui->CommandInput->clear();
     if (command == "RUN") {
         run();
@@ -108,8 +109,7 @@ void MainWindow::handleInput(QString identifier) {
 }
 
 void MainWindow::writeOutput(QString content) {
-    QString old = ui->OutputDisplay->toPlainText();
-    ui->OutputDisplay->setText(old + content + "\n");
+    ui->OutputDisplay->append(content);
 }
 
 MainWindow::~MainWindow() {

@@ -5,14 +5,17 @@
 #include <QString>
 
 #include "exceptions.h"
+#include "expression.h"
 #include "runtime.h"
+#include "utils.h"
 
 class Statement {
   public:
     Statement();
-    static Statement* parse(QString statement);
+    static Statement* parse(const QString statement);
     virtual void execute(Runtime& context) const;
     virtual const QString ast() const;
+    virtual ~Statement();
 };
 
 class RemarkStatement: public Statement {
@@ -20,21 +23,33 @@ class RemarkStatement: public Statement {
     QString body;
 
   public:
-    RemarkStatement(QString b): body(b) {
+    RemarkStatement(const QString b): body(b) {
     }
     const QString ast() const override;
 };
 
-class LetStatement: public Statement {};
+class LetStatement: public Statement {
+  private:
+    const Expression* expression;
+
+  public:
+    LetStatement(const QString body);
+    void execute(Runtime& context) const override;
+    const QString ast() const override;
+    ~LetStatement();
+};
 
 class PrintStatement: public Statement {
   private:
     // TODO: support expression
     QString identifier;
+    const Expression* expression;
 
   public:
-    PrintStatement(QString body);
+    PrintStatement(const QString body);
     void execute(Runtime& context) const override;
+    const QString ast() const override;
+    ~PrintStatement();
 };
 
 class InputStatement: public Statement {
@@ -42,14 +57,36 @@ class InputStatement: public Statement {
     QString identifier;
 
   public:
-    InputStatement(QString body);
+    InputStatement(const QString body);
     void execute(Runtime& context) const override;
     const QString ast() const override;
 };
 
-class GotoStatement: public Statement {};
+class GotoStatement: public Statement {
+  private:
+    int destination;
 
-class IfStatement: public Statement {};
+  public:
+    GotoStatement(const QString body);
+    void execute(Runtime& context) const override;
+    const QString ast() const override;
+    int getDestination() const;
+};
+
+class IfStatement: public Statement {
+  private:
+    QChar conditionOp;
+    const Expression *lhs, *rhs;
+    const GotoStatement* gotoStmt;
+    // Parse condition, set condition operator, and return index of operator
+    int parseCondition(const QString condition);
+
+  public:
+    IfStatement(const QString body);
+    void execute(Runtime& context) const override;
+    const QString ast() const override;
+    ~IfStatement();
+};
 
 class EndStatement: public Statement {
   public:

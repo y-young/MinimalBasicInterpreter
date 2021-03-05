@@ -8,6 +8,7 @@
 #include "exceptions.h"
 #include "runtime.h"
 #include "tokenizer.h"
+#include "utils.h"
 
 enum ExpressionType { UNKOWN_EXP, CONST_EXP, IDENTIFIER_EXP, COMPOUND_EXP };
 
@@ -17,7 +18,7 @@ class Expression {
 
   public:
     Expression();
-    static const Expression* parse(QString expression);
+    static const Expression* parse(const QString expression);
     virtual int evaluate(Runtime& context) const;
     virtual QString ast() const;
     virtual QString getIdentifierName() const;

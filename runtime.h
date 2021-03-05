@@ -4,12 +4,15 @@
 #include "evaluationcontext.h"
 #include "pseudoio.h"
 
+enum StatusCode { OK, INTERRUPT, GOTO, HALT };
+
 class Runtime {
   public:
     PseudoIO io;
     EvaluationContext symbols;
     QMap<int, QString>::const_iterator pc = nullptr;
-    bool halt = false;
+    int gotoDst;
+    StatusCode status;
     Runtime();
     void reset();
 };

@@ -5,7 +5,7 @@
 Expression::Expression() {
 }
 
-const Expression* Expression::parse(QString expression) {
+const Expression* Expression::parse(const QString expression) {
     Tokenizer parser(expression);
     QList<const Token*>* tokens = parser.tokenize();
     qDebug() << parser.toString();
@@ -163,7 +163,7 @@ int CompoundExpression::evaluate(Runtime& context) const {
 }
 
 QString CompoundExpression::ast() const {
-    return QString("%1\n    %2\n    %3").arg(op).arg(lhs->ast()).arg(rhs->ast());
+    return op + indent(QString("\n%1\n%2").arg(lhs->ast()).arg(rhs->ast()));
 }
 
 QString CompoundExpression::toString() const {

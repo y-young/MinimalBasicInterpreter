@@ -6,5 +6,6 @@ Runtime::Runtime() {
 void Runtime::reset() {
     symbols.clear();
     pc = nullptr;
-    halt = false;
+    status = OK;
+    gotoDst = 0;
 }
