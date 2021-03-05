@@ -10,21 +10,25 @@ CONFIG += c++11
 
 SOURCES += \
     evaluationcontext.cpp \
+    expression.cpp \
     main.cpp \
     mainwindow.cpp \
     program.cpp \
     pseudoio.cpp \
     runtime.cpp \
-    statement.cpp
+    statement.cpp \
+    tokenizer.cpp
 
 HEADERS += \
     evaluationcontext.h \
     exceptions.h \
+    expression.h \
     mainwindow.h \
     program.h \
     pseudoio.h \
     runtime.h \
-    statement.h
+    statement.h \
+    tokenizer.h
 
 FORMS += \
     mainwindow.ui
