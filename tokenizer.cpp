@@ -3,6 +3,15 @@
 #include <QDebug>
 
 Token::Token(TokenType t, QString c): type(t), content(c) {
+    if (content == "**") {
+        precedence = 4;
+    } else if (content == "*" || content == "/") {
+        precedence = 3;
+    } else if (content == "+" || content == "-") {
+        precedence = 2;
+    } else {
+        precedence = 1;
+    }
 }
 
 QString Token::toString() const {
@@ -26,7 +35,7 @@ QList<const Token*>* Tokenizer::tokenize() {
             saveLastToken();
         } else if ((c >= '0' && c <= '9') || c == '-') {
             if (currentTokenType == NONE) {
-                currentTokenType = NUMBER;
+                currentTokenType = CONSTANT;
             }
             if (c != '-') {
                 // n1, 123
@@ -44,7 +53,7 @@ QList<const Token*>* Tokenizer::tokenize() {
                 handleOperator(c);
             }
         } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
-            if (currentTokenType == NUMBER) {
+            if (currentTokenType == CONSTANT) {
                 throw SyntaxError("Invalid syntax " + currentToken + QString(c), expression);
             }
             currentTokenType = IDENTIFIER;
@@ -90,7 +99,7 @@ void Tokenizer::handleOperator(QString current) {
 
 QString Tokenizer::toString() const {
     QString output = "";
-    for (auto token : *tokens) {
+    for (const Token* token : *tokens) {
         output += token->toString() + " ";
     }
     return output;

@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "tokenizer.h"
+#include "expression.h"
 
 MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
@@ -62,11 +62,8 @@ void MainWindow::executeCommand() {
         return;
     }
 
-    Tokenizer parser(command);
-    parser.tokenize();
-    qDebug() << parser.toString();
+    qDebug() << Expression::parse(command)->toString();
     return;
-
     ui->CommandInput->clear();
     if (command == "RUN") {
         run();

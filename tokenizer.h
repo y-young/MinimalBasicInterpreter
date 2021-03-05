@@ -7,13 +7,14 @@
 
 #include "exceptions.h"
 
-enum TokenType { NONE, IDENTIFIER, NUMBER, OPERATOR };
+enum TokenType { NONE, IDENTIFIER, CONSTANT, OPERATOR };
 const QList<QChar> opList{'+', '-', '*', '/', '(', ')', '='};
 
 class Token {
   public:
     const TokenType type;
     const QString content;
+    int precedence;
     Token(TokenType t, QString c);
     QString toString() const;
 };
