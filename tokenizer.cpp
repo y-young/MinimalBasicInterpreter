@@ -54,7 +54,7 @@ QList<const Token*>* Tokenizer::tokenize() {
             }
         } else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
             if (currentTokenType == CONSTANT) {
-                throw SyntaxError("Invalid syntax " + currentToken + QString(c), expression);
+                throw SyntaxError(QString("Invalid syntax %1%2").arg(currentToken).arg(c));
             }
             currentTokenType = IDENTIFIER;
             currentToken.append(c);
@@ -66,7 +66,7 @@ QList<const Token*>* Tokenizer::tokenize() {
                 handleOperator(c);
             }
         } else {
-            throw SyntaxError("Invalid syntax " + QString(c), expression);
+            throw SyntaxError("Invalid syntax " + QString(c));
         }
         ++index;
     }
@@ -92,7 +92,7 @@ void Tokenizer::handleOperator(QString current) {
     saveLastToken();
     if (lastTokenType == OPERATOR && current != "(" && current != ")" && lastToken != "(" && lastToken != ")" &&
         lastToken != "=") {
-        throw SyntaxError("Invalid syntax: " + lastToken + current, expression);
+        throw SyntaxError(QString("Invalid syntax: %1%2").arg(lastToken).arg(current));
     }
     addToken(new Token(OPERATOR, current));
 }

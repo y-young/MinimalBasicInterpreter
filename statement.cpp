@@ -22,7 +22,7 @@ Statement* Statement::parse(const QString statement) {
     } else if (name == "END") {
         return new EndStatement();
     }
-    throw SyntaxError("Unknown statement type: " + name, statement);
+    throw SyntaxError("Unknown statement type " + name);
 }
 
 void Statement::execute(Runtime&) const {
@@ -114,7 +114,7 @@ const QString GotoStatement::ast() const {
 IfStatement::IfStatement(const QString body) {
     int indexOfThen = body.indexOf("THEN");
     if (indexOfThen == -1) {
-        throw SyntaxError("Missing THEN clause for IF statement", body);
+        throw SyntaxError("Missing THEN clause for IF statement");
     }
     gotoStmt = new GotoStatement(body.mid(indexOfThen + 5));
     int indexOfOp = parseCondition(body);
@@ -156,7 +156,7 @@ int IfStatement::parseCondition(const QString condition) {
         conditionOp = '>';
         return index;
     }
-    throw SyntaxError("Invalid condition operator", condition);
+    throw SyntaxError("Invalid condition operator");
 }
 
 IfStatement::~IfStatement() {

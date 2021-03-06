@@ -10,7 +10,9 @@ const QPair<int, QString> Program::parseLine(QString line) const {
     bool ok;
     lineNo = lineStr.toInt(&ok);
     if (!ok) {
-        throw SyntaxError("Wrong line number format \"" + lineStr + "\"", line);
+        SyntaxError error("Wrong line number format \"" + lineStr + "\"");
+        error.setContext(line);
+        throw error;
     }
     QString content = line.section(' ', 1, -1);
     return QPair<int, QString>(lineNo, content);
@@ -44,13 +46,17 @@ void Program::load(QString filename) {
 
 void Program::stepExecute() {
     // execute single statement
-    int id = context.pc.key();
-    qDebug() << id;
+    int lineNo = context.pc.key();
+    QString line = context.pc.value();
+    qDebug() << lineNo;
     try {
-        const Statement* instruction = Statement::parse(context.pc.value());
+        const Statement* instruction = Statement::parse(line);
         instruction->execute(context);
-    } catch (const Exception& error) {
-        QMessageBox::critical(this, "Error", error.what());
+    } catch (Exception& error) {
+        context.status = HALT;
+        error.setContext(QString("%1 %2").arg(lineNo).arg(line));
+        throw;
+        return;
     }
     ++context.pc;
     if (context.pc == data.constEnd()) {
@@ -82,7 +88,11 @@ void Program::start() {
 void Program::input(QString identifier, int value) {
     context.symbols.setValue(identifier, value);
     context.status = OK;
-    run();
+    try {
+        run();
+    } catch (const Exception& error) {
+        QMessageBox::critical(this, "Error", error.what());
+    }
 }
 
 QString Program::printAst() const {

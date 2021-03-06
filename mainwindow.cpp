@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "expression.h"
-
 MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     program = new Program();
@@ -19,12 +17,8 @@ MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWin
 void MainWindow::run() {
     ui->OutputDisplay->clear();
     ui->ASTDisplay->clear();
-    try {
-        program->start();
-        ui->ASTDisplay->setText(program->printAst());
-    } catch (const Exception& error) {
-        QMessageBox::critical(this, "Error", error.what());
-    }
+    program->start();
+    ui->ASTDisplay->setText(program->printAst());
 }
 
 void MainWindow::load() {
@@ -66,23 +60,23 @@ void MainWindow::executeCommand() {
     }
 
     ui->CommandInput->clear();
-    if (command == "RUN") {
-        run();
-    } else if (command == "LOAD") {
-        load();
-    } else if (command == "CLEAR") {
-        clear();
-    } else if (command == "HELP") {
-        showHelp();
-    } else if (command == "QUIT") {
-        QApplication::exit(0);
-    } else {
-        try {
+    try {
+        if (command == "RUN") {
+            run();
+        } else if (command == "LOAD") {
+            load();
+        } else if (command == "CLEAR") {
+            clear();
+        } else if (command == "HELP") {
+            showHelp();
+        } else if (command == "QUIT") {
+            QApplication::exit(0);
+        } else {
             program->edit(command);
-        } catch (const Exception& error) {
-            QMessageBox::critical(this, "Error", error.what());
+            ui->CodeDisplay->setText(program->text());
         }
-        ui->CodeDisplay->setText(program->text());
+    } catch (const Exception& error) {
+        QMessageBox::critical(this, "Error", error.what());
     }
 }
 

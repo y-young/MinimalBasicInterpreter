@@ -8,44 +8,46 @@
 class Exception: public std::exception {
   protected:
     QString info;
-    const QString type = "Exception";
+    QString context;
+    const char* message(const QString type) const {
+        std::string* msg = new std::string();
+        QString errorMsg = QString("%1: %2").arg(type).arg(info);
+        if (!context.isEmpty()) {
+            errorMsg += "\n\t> " + context;
+        }
+        *msg = errorMsg.toStdString();
+        return msg->c_str();
+    }
 
   public:
     Exception(QString msg) {
         info = msg;
     }
 
-    Exception(QString msg, QString context) {
-        info = QString("%1\n\t> %2").arg(msg).arg(context);
+    void setContext(const QString ctx) {
+        context = ctx;
     }
 
     virtual const char* what() const noexcept override {
-        std::string* msg = new std::string();
-        const QString message = QString("%1: %2").arg(type).arg(info);
-        *msg = message.toStdString();
-        return msg->c_str();
+        return message("Exception");
     }
 };
 
 class SyntaxError: public Exception {
-  protected:
-    const QString type = "SyntaxError";
-
   public:
     SyntaxError(QString msg): Exception(msg) {
     }
-    SyntaxError(QString msg, QString context): Exception(msg, context) {
+    const char* what() const noexcept override {
+        return message("SyntaxError");
     }
 };
 
 class RuntimeError: public Exception {
-  protected:
-    const QString type = "RuntimeError";
-
   public:
     RuntimeError(QString msg): Exception(msg) {
     }
-    RuntimeError(QString msg, QString context): Exception(msg, context) {
+    const char* what() const noexcept override {
+        return message("RuntimeError");
     }
 };
 

@@ -25,12 +25,12 @@ const Expression* Expression::parse(const QString expression) {
                     const Expression *rhs = operands.empty() ? nullptr : operands.pop(),
                                      *lhs = operands.empty() ? nullptr : operands.pop();
                     if (!rhs || !lhs) {
-                        throw SyntaxError("Missing operands for operator " + op->content, expression);
+                        throw SyntaxError("Missing operands for operator " + op->content);
                     }
                     operands.push(new CompoundExpression(op->content, lhs, rhs));
                 }
                 if (!hasLeftBracket) {
-                    throw SyntaxError("Missing \"(\"", expression);
+                    throw SyntaxError("Missing \"(\"");
                 }
                 break;
             } else if (token->content == "(") {
@@ -40,7 +40,7 @@ const Expression* Expression::parse(const QString expression) {
                     const Expression *rhs = operands.empty() ? nullptr : operands.pop(),
                                      *lhs = operands.empty() ? nullptr : operands.pop();
                     if (!rhs || !lhs) {
-                        throw SyntaxError("Missing operands for operator " + token->content, expression);
+                        throw SyntaxError("Missing operands for operator " + token->content);
                     }
                     operands.push(new CompoundExpression(operators.pop()->content, lhs, rhs));
                 }
@@ -63,7 +63,7 @@ const Expression* Expression::parse(const QString expression) {
         const Expression *rhs = operands.empty() ? nullptr : operands.pop(),
                          *lhs = operands.empty() ? nullptr : operands.pop();
         if (!rhs || !lhs) {
-            throw SyntaxError("Missing operands for operator " + op->content, expression);
+            throw SyntaxError("Missing operands for operator " + op->content);
         }
         operands.push(new CompoundExpression(op->content, lhs, rhs));
     }

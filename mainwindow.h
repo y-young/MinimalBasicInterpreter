@@ -11,7 +11,6 @@
 #include <QTextStream>
 
 #include "exceptions.h"
-#include "io.h"
 #include "program.h"
 
 QT_BEGIN_NAMESPACE
