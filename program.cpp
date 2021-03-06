@@ -94,7 +94,7 @@ void Program::input(QString identifier, int value) {
     try {
         run();
     } catch (const Exception& error) {
-        QMessageBox::critical(this, "Error", error.what());
+        showErrorMessage(error);
     }
 }
 
