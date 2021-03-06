@@ -1,6 +1,7 @@
 #include "expression.h"
 
 #include <QDebug>
+#include <QtMath>
 
 Expression::Expression() {
 }
@@ -151,6 +152,9 @@ int CompoundExpression::evaluate(Runtime& context) const {
     }
     if (op == "*") {
         return left * right;
+    }
+    if (op == "**") {
+        return qPow(left, right);
     }
     if (op == "/") {
         if (right == 0) {
