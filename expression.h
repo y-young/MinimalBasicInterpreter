@@ -13,9 +13,6 @@
 enum ExpressionType { UNKOWN_EXP, CONST_EXP, IDENTIFIER_EXP, COMPOUND_EXP };
 
 class Expression {
-  protected:
-    const ExpressionType type = UNKOWN_EXP;
-
   public:
     Expression();
     static const Expression* parse(const QString expression);
@@ -23,13 +20,11 @@ class Expression {
     virtual QString ast() const;
     virtual QString getIdentifierName() const;
     virtual QString toString() const;
+    virtual ExpressionType getType() const;
     virtual ~Expression();
 };
 
 class ConstantExpression: public Expression {
-  protected:
-    const ExpressionType type = CONST_EXP;
-
   private:
     const int value;
 
@@ -39,12 +34,10 @@ class ConstantExpression: public Expression {
     int evaluate(Runtime& context) const override;
     QString ast() const override;
     QString toString() const override;
+    ExpressionType getType() const override;
 };
 
 class IdentifierExpression: public Expression {
-  protected:
-    const ExpressionType type = IDENTIFIER_EXP;
-
   private:
     const QString identifier;
 
@@ -55,12 +48,10 @@ class IdentifierExpression: public Expression {
     QString ast() const override;
     QString getIdentifierName() const override;
     QString toString() const override;
+    ExpressionType getType() const override;
 };
 
 class CompoundExpression: public Expression {
-  protected:
-    const ExpressionType type = COMPOUND_EXP;
-
   private:
     const QString op;
     const Expression *lhs, *rhs;
@@ -70,6 +61,8 @@ class CompoundExpression: public Expression {
     int evaluate(Runtime& context) const override;
     QString ast() const override;
     QString toString() const override;
+    ExpressionType getType() const override;
+    QString getOp() const;
     ~CompoundExpression();
 };
 

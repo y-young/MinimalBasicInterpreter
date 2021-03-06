@@ -22,7 +22,7 @@ Statement* Statement::parse(const QString statement) {
     } else if (name == "END") {
         return new EndStatement();
     }
-    throw SyntaxError("Unknown statement type " + name);
+    throw SyntaxError(QString("Unknown statement type \"%1\"").arg(name));
 }
 
 void Statement::execute(Runtime&) const {
@@ -43,6 +43,10 @@ const QString RemarkStatement::ast() const {
 // LET
 LetStatement::LetStatement(const QString body) {
     expression = Expression::parse(body);
+    // ensure an assignment expression
+    if (expression->getType() != COMPOUND_EXP || static_cast<const CompoundExpression*>(expression)->getOp() != "=") {
+        throw SyntaxError(QString("Invalid expression \"%1\" for LET statement").arg(body));
+    }
 }
 
 void LetStatement::execute(Runtime& context) const {
@@ -77,6 +81,11 @@ PrintStatement::~PrintStatement() {
 
 // INPUT
 InputStatement::InputStatement(const QString body): identifier(body) {
+    // ensure an identifier expression
+    const Expression* expression = Expression::parse(identifier);
+    if (expression->getType() != IDENTIFIER_EXP) {
+        throw SyntaxError(QString("Invalid idenitfier \"%1\" for INPUT statement").arg(body));
+    }
 }
 
 void InputStatement::execute(Runtime& context) const {
@@ -93,7 +102,7 @@ GotoStatement::GotoStatement(const QString body) {
     bool ok;
     destination = body.toInt(&ok);
     if (!ok) {
-        throw SyntaxError("Invalid jump destination " + body);
+        throw SyntaxError(QString("Invalid jump destination \"%1\"").arg(body));
     }
 }
 
@@ -116,7 +125,7 @@ IfStatement::IfStatement(const QString body) {
     if (indexOfThen == -1) {
         throw SyntaxError("Missing THEN clause for IF statement");
     }
-    gotoStmt = new GotoStatement(body.mid(indexOfThen + 5));
+    gotoStmt = new GotoStatement(body.mid(indexOfThen + 4));
     int indexOfOp = parseCondition(body);
     lhs = Expression::parse(body.left(indexOfOp));
     rhs = Expression::parse(body.mid(indexOfOp + 1, indexOfThen - indexOfOp - 1));
@@ -156,7 +165,7 @@ int IfStatement::parseCondition(const QString condition) {
         conditionOp = '>';
         return index;
     }
-    throw SyntaxError("Invalid condition operator");
+    throw SyntaxError("Invalid condition operator for IF statement");
 }
 
 IfStatement::~IfStatement() {

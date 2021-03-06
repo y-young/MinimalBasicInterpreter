@@ -26,7 +26,7 @@ const Expression* Expression::parse(const QString expression) {
                     const Expression *rhs = operands.empty() ? nullptr : operands.pop(),
                                      *lhs = operands.empty() ? nullptr : operands.pop();
                     if (!rhs || !lhs) {
-                        throw SyntaxError("Missing operands for operator " + op->content);
+                        throw SyntaxError(QString("Missing operands for operator ").arg(op->content));
                     }
                     operands.push(new CompoundExpression(op->content, lhs, rhs));
                 }
@@ -41,7 +41,7 @@ const Expression* Expression::parse(const QString expression) {
                     const Expression *rhs = operands.empty() ? nullptr : operands.pop(),
                                      *lhs = operands.empty() ? nullptr : operands.pop();
                     if (!rhs || !lhs) {
-                        throw SyntaxError("Missing operands for operator " + token->content);
+                        throw SyntaxError(QString("Missing operands for operator ").arg(token->content));
                     }
                     operands.push(new CompoundExpression(operators.pop()->content, lhs, rhs));
                 }
@@ -64,9 +64,15 @@ const Expression* Expression::parse(const QString expression) {
         const Expression *rhs = operands.empty() ? nullptr : operands.pop(),
                          *lhs = operands.empty() ? nullptr : operands.pop();
         if (!rhs || !lhs) {
-            throw SyntaxError("Missing operands for operator " + op->content);
+            if (op->content == "(") {
+                throw SyntaxError("Missing \")\"");
+            }
+            throw SyntaxError(QString("Missing operands for operator ").arg(op->content));
         }
         operands.push(new CompoundExpression(op->content, lhs, rhs));
+    }
+    if (operands.empty()) {
+        throw SyntaxError("Missing expression");
     }
     return operands.pop();
 }
@@ -85,6 +91,10 @@ QString Expression::getIdentifierName() const {
 
 QString Expression::toString() const {
     return "";
+}
+
+ExpressionType Expression::getType() const {
+    return UNKOWN_EXP;
 }
 
 Expression::~Expression() {
@@ -109,6 +119,10 @@ QString ConstantExpression::toString() const {
     return QString("ConstantExpression(%1)").arg(value);
 }
 
+ExpressionType ConstantExpression::getType() const {
+    return CONST_EXP;
+}
+
 // IdentifierExpression
 IdentifierExpression::IdentifierExpression(const QString i): identifier(i) {
 }
@@ -130,6 +144,10 @@ QString IdentifierExpression::ast() const {
 
 QString IdentifierExpression::toString() const {
     return QString("IdentifierExpression(%1)").arg(identifier);
+}
+
+ExpressionType IdentifierExpression::getType() const {
+    return IDENTIFIER_EXP;
 }
 
 // CompoundExpression
@@ -172,6 +190,14 @@ QString CompoundExpression::ast() const {
 
 QString CompoundExpression::toString() const {
     return QString("CompoundExpression(%1, %2, %3)").arg(op).arg(lhs->toString()).arg(rhs->toString());
+}
+
+ExpressionType CompoundExpression::getType() const {
+    return COMPOUND_EXP;
+}
+
+QString CompoundExpression::getOp() const {
+    return op;
 }
 
 CompoundExpression::~CompoundExpression() {
