@@ -59,8 +59,8 @@ void Program::stepExecute() {
         return;
     }
     ++context.pc;
-    if (context.pc == data.constEnd()) {
-        context.status = INTERRUPT;
+    if (context.pc == data.constEnd() && context.status != GOTO) {
+        context.status = HALT;
     }
 }
 
@@ -68,7 +68,10 @@ void Program::run() {
     while (context.status != INTERRUPT && context.status != HALT) {
         // handle goto statements, find corresponding const_iterator
         if (context.status == GOTO) {
-            context.pc = data.find(context.gotoDst);
+            context.pc = data.constFind(context.gotoDst);
+            if (context.pc == data.constEnd()) {
+                throw RuntimeError(QString("Jump destination \"%1\" doesn't exist").arg(context.gotoDst));
+            }
             context.status = OK;
             context.gotoDst = 0;
         }
