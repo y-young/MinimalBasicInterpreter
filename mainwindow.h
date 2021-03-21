@@ -12,6 +12,7 @@
 
 #include "exceptions.h"
 #include "program.h"
+#include "statement.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -29,13 +30,18 @@ class MainWindow: public QMainWindow {
   private:
     Ui::MainWindow* ui;
     Program* program;
+    Runtime context;
+    PseudoIO* io;
     void load();
     void run();
     void clear();
     void showHelp();
     void executeCommand();
     void awaitInput(QString identifier);
+    void awaitProgramInput(QString identifier);
+    void awaitConsoleInput(QString identifier);
     void writeOutput(QString content);
     void handleInput(QString stream);
+    void input(QString identifier, int value);
 };
 #endif // MAINWINDOW_H

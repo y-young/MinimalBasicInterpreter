@@ -11,17 +11,17 @@ MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWin
     connect(ui->CommandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&MainWindow::executeCommand));
 
     connect(&program->io(), &PseudoIO::printOutput, this, &MainWindow::writeOutput);
-    connect(&program->io(), &PseudoIO::requestInput, this, &MainWindow::awaitInput);
+    connect(&program->io(), &PseudoIO::requestInput, this, &MainWindow::awaitProgramInput);
+
+    connect(&context.io, &PseudoIO::printOutput, this, &MainWindow::writeOutput);
+    connect(&context.io, &PseudoIO::requestInput, this, &MainWindow::awaitConsoleInput);
+    connect(&context.io, &PseudoIO::receivedInput, this, QOverload<QString, int>::of(&MainWindow::input));
 }
 
 void MainWindow::run() {
     ui->OutputDisplay->clear();
     ui->ASTDisplay->clear();
-    try {
-        program->start();
-    } catch (const Exception& error) {
-        showErrorMessage(error);
-    }
+    program->start();
     ui->ASTDisplay->setText(program->printAst());
 }
 
@@ -69,23 +69,26 @@ void MainWindow::executeCommand() {
 
     ui->CommandInput->clear();
 
-    if (command == "RUN") {
-        run();
-    } else if (command == "LOAD") {
-        load();
-    } else if (command == "CLEAR") {
-        clear();
-    } else if (command == "HELP") {
-        showHelp();
-    } else if (command == "QUIT") {
-        QApplication::exit(0);
-    } else {
-        try {
+    try {
+        if (command == "RUN") {
+            run();
+        } else if (command == "LOAD") {
+            load();
+        } else if (command == "CLEAR") {
+            clear();
+        } else if (command == "HELP") {
+            showHelp();
+        } else if (command == "QUIT") {
+            QApplication::exit(0);
+        } else if (command.startsWith("PRINT") || command.startsWith("LET") || command.startsWith("INPUT")) {
+            Statement* stmt = Statement::parse(command);
+            stmt->execute(context);
+        } else {
             program->edit(command);
-        } catch (const Exception& error) {
-            showErrorMessage(error);
+            ui->CodeDisplay->setText(program->text());
         }
-        ui->CodeDisplay->setText(program->text());
+    } catch (const Exception& error) {
+        showErrorMessage(error);
     }
 }
 
@@ -95,6 +98,16 @@ void MainWindow::awaitInput(QString identifier) {
     // Detach command input stream & Attach program input stream
     disconnect(ui->CommandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&MainWindow::executeCommand));
     connect(ui->CommandInput, &QLineEdit::returnPressed, this, [=]() { this->handleInput(identifier); });
+}
+
+void MainWindow::awaitProgramInput(QString identifier) {
+    io = &program->io();
+    awaitInput(identifier);
+}
+
+void MainWindow::awaitConsoleInput(QString identifier) {
+    io = &context.io;
+    awaitInput(identifier);
 }
 
 void MainWindow::handleInput(QString identifier) {
@@ -108,11 +121,15 @@ void MainWindow::handleInput(QString identifier) {
     disconnect(ui->CommandInput, &QLineEdit::returnPressed, nullptr, nullptr);
     connect(ui->CommandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&MainWindow::executeCommand));
     stream = stream.section(' ', 1); // Get actual input value
-    program->io().input(identifier, stream);
+    io->input(identifier, stream);
 }
 
 void MainWindow::writeOutput(QString content) {
     ui->OutputDisplay->append(content);
+}
+
+void MainWindow::input(QString identifier, int value) {
+    context.symbols.setValue(identifier, value);
 }
 
 MainWindow::~MainWindow() {
