@@ -14,6 +14,11 @@ const QPair<int, QString> Program::parseLine(QString line) const {
         error.setContext(line);
         throw error;
     }
+    if (lineNo <= 0 || lineNo > 1000000) {
+        SyntaxError error("Line number should be a positive integer below 1000000");
+        error.setContext(line);
+        throw error;
+    }
     QString content = line.section(' ', 1, -1);
     return QPair<int, QString>(lineNo, content);
 }

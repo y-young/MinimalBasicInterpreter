@@ -142,8 +142,8 @@ void IfStatement::execute(Runtime& context) const {
 
 const QString IfStatement::ast() const {
     return QString("IF THEN\n    %1\n    %2\n    %3\n    %4")
-        .arg(conditionOp)
         .arg(lhs->ast())
+        .arg(conditionOp)
         .arg(rhs->ast())
         .arg(gotoStmt->getDestination());
 }
