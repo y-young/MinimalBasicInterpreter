@@ -29,6 +29,9 @@ Tokenizer::Tokenizer(const QString& exp): expression(exp) {
 QList<const Token*>* Tokenizer::tokenize() {
     QChar c;
     int index = 0;
+    // remove spaces
+    QString expression = this->expression;
+    expression.replace(QString(' '), QString());
     while (index < expression.length()) {
         c = expression[index];
         if (c == ' ') {
