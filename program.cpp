@@ -19,7 +19,7 @@ const QPair<int, QString> Program::parseLine(QString line) const {
         error.setContext(line);
         throw error;
     }
-    QString content = line.section(' ', 1, -1);
+    QString content = line.simplified().section(' ', 1, -1);
     return QPair<int, QString>(lineNo, content);
 }
 
