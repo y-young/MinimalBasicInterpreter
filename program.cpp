@@ -36,7 +36,6 @@ void Program::edit(QString command) {
 }
 
 void Program::load(QString filename) {
-    clear();
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return;
@@ -88,13 +87,16 @@ void Program::start() {
     if (data.empty()) {
         throw Exception("No program to run");
     }
-    context.reset();
     context.pc = data.constBegin();
+    context.status = OK;
     run();
 }
 
 void Program::input(QString identifier, int value) {
     context.symbols.setValue(identifier, value);
+    if (context.status != INTERRUPT) { // Console input
+        return;
+    }
     context.status = OK;
     try {
         run();
@@ -130,4 +132,8 @@ const QString Program::text() const {
 
 PseudoIO& Program::io() {
     return context.io;
+}
+
+Runtime* Program::getContext() {
+    return &context;
 }

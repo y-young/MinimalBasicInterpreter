@@ -12,7 +12,7 @@ class Runtime {
     EvaluationContext symbols;
     QMap<int, QString>::const_iterator pc = nullptr;
     int gotoDst;
-    StatusCode status;
+    StatusCode status = HALT;
     Runtime();
     void reset();
 };

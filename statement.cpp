@@ -54,7 +54,7 @@ void LetStatement::execute(Runtime& context) const {
 }
 
 const QString LetStatement::ast() const {
-    return "LET " + expression->ast(); //.replace('\n', "\n    ");
+    return "LET " + expression->ast();
 }
 
 LetStatement::~LetStatement() {
@@ -90,7 +90,9 @@ InputStatement::InputStatement(const QString body): identifier(body) {
 
 void InputStatement::execute(Runtime& context) const {
     context.io.input(identifier);
-    context.status = INTERRUPT;
+    if (context.status == OK) { // Console input
+        context.status = INTERRUPT;
+    }
 }
 
 const QString InputStatement::ast() const {

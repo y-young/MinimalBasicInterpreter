@@ -11,17 +11,17 @@ MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWin
     connect(ui->CommandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&MainWindow::executeCommand));
 
     connect(&program->io(), &PseudoIO::printOutput, this, &MainWindow::writeOutput);
-    connect(&program->io(), &PseudoIO::requestInput, this, &MainWindow::awaitProgramInput);
-
-    connect(&context.io, &PseudoIO::printOutput, this, &MainWindow::writeOutput);
-    connect(&context.io, &PseudoIO::requestInput, this, &MainWindow::awaitConsoleInput);
-    connect(&context.io, &PseudoIO::receivedInput, this, QOverload<QString, int>::of(&MainWindow::input));
+    connect(&program->io(), &PseudoIO::requestInput, this, &MainWindow::awaitInput);
 }
 
 void MainWindow::run() {
     ui->OutputDisplay->clear();
     ui->ASTDisplay->clear();
-    program->start();
+    try {
+        program->start();
+    } catch (const Exception& error) {
+        showErrorMessage(error);
+    }
     ui->ASTDisplay->setText(program->printAst());
 }
 
@@ -36,8 +36,6 @@ void MainWindow::load() {
         showErrorMessage(error);
     }
     ui->CodeDisplay->setText(program->text());
-    ui->OutputDisplay->clear();
-    ui->ASTDisplay->clear();
 }
 
 void MainWindow::clear() {
@@ -82,7 +80,7 @@ void MainWindow::executeCommand() {
             QApplication::exit(0);
         } else if (command.startsWith("PRINT") || command.startsWith("LET") || command.startsWith("INPUT")) {
             Statement* stmt = Statement::parse(command);
-            stmt->execute(context);
+            stmt->execute(*program->getContext());
         } else {
             program->edit(command);
             ui->CodeDisplay->setText(program->text());
@@ -100,16 +98,6 @@ void MainWindow::awaitInput(QString identifier) {
     connect(ui->CommandInput, &QLineEdit::returnPressed, this, [=]() { this->handleInput(identifier); });
 }
 
-void MainWindow::awaitProgramInput(QString identifier) {
-    io = &program->io();
-    awaitInput(identifier);
-}
-
-void MainWindow::awaitConsoleInput(QString identifier) {
-    io = &context.io;
-    awaitInput(identifier);
-}
-
 void MainWindow::handleInput(QString identifier) {
     QString stream = ui->CommandInput->text();
     if (!stream.startsWith("? ")) {
@@ -121,15 +109,11 @@ void MainWindow::handleInput(QString identifier) {
     disconnect(ui->CommandInput, &QLineEdit::returnPressed, nullptr, nullptr);
     connect(ui->CommandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&MainWindow::executeCommand));
     stream = stream.section(' ', 1); // Get actual input value
-    io->input(identifier, stream);
+    program->io().input(identifier, stream);
 }
 
 void MainWindow::writeOutput(QString content) {
     ui->OutputDisplay->append(content);
-}
-
-void MainWindow::input(QString identifier, int value) {
-    context.symbols.setValue(identifier, value);
 }
 
 MainWindow::~MainWindow() {

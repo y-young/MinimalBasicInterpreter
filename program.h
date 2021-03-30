@@ -32,6 +32,7 @@ class Program: public QWidget {
     void clear();
     const QString text() const;
     PseudoIO& io();
+    Runtime* getContext();
 };
 
 #endif // PROGRAM_H
