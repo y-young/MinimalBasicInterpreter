@@ -14,7 +14,10 @@ enum ExpressionType { UNKOWN_EXP, CONST_EXP, IDENTIFIER_EXP, COMPOUND_EXP };
 
 class Expression {
   public:
+    Exception* error = nullptr;
     Expression();
+    Expression(Exception* exception): error(exception) {
+    }
     static const Expression* parse(const QString expression);
     virtual int evaluate(Runtime& context) const;
     virtual QString ast() const;
@@ -31,6 +34,8 @@ class ConstantExpression: public Expression {
   public:
     ConstantExpression(int val);
     ConstantExpression(const Token* token);
+    ConstantExpression(Exception* exception): Expression(exception), value(0) {
+    }
     int evaluate(Runtime& context) const override;
     QString ast() const override;
     QString toString() const override;
@@ -44,6 +49,8 @@ class IdentifierExpression: public Expression {
   public:
     IdentifierExpression(const QString i);
     IdentifierExpression(const Token* token);
+    IdentifierExpression(Exception* exception): Expression(exception), identifier("") {
+    }
     int evaluate(Runtime& context) const override;
     QString ast() const override;
     QString getIdentifierName() const override;
@@ -58,6 +65,8 @@ class CompoundExpression: public Expression {
 
   public:
     CompoundExpression(const QString o, const Expression* l, const Expression* r);
+    CompoundExpression(Exception* exception): Expression(exception), op(""), lhs(nullptr), rhs(nullptr) {
+    }
     int evaluate(Runtime& context) const override;
     QString ast() const override;
     QString toString() const override;

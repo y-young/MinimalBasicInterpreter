@@ -17,12 +17,12 @@ MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWin
 void MainWindow::run() {
     ui->OutputDisplay->clear();
     ui->ASTDisplay->clear();
+    ui->ASTDisplay->setText(program->printAst());
     try {
         program->start();
-    } catch (const Exception& error) {
-        showErrorMessage(error);
+    } catch (Exception* error) {
+        showErrorMessage(*error);
     }
-    ui->ASTDisplay->setText(program->printAst());
 }
 
 void MainWindow::load() {
@@ -32,8 +32,8 @@ void MainWindow::load() {
     }
     try {
         program->load(filename);
-    } catch (const Exception& error) {
-        showErrorMessage(error);
+    } catch (Exception* error) {
+        showErrorMessage(*error);
     }
     ui->CodeDisplay->setText(program->text());
 }
@@ -81,12 +81,14 @@ void MainWindow::executeCommand() {
         } else if (command.startsWith("PRINT") || command.startsWith("LET") || command.startsWith("INPUT")) {
             Statement* stmt = Statement::parse(command);
             stmt->execute(*program->getContext());
+        } else if (command == "LIST") {
+            // do nothing
         } else {
             program->edit(command);
             ui->CodeDisplay->setText(program->text());
         }
-    } catch (const Exception& error) {
-        showErrorMessage(error);
+    } catch (Exception* error) {
+        showErrorMessage(*error);
     }
 }
 

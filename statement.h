@@ -10,8 +10,13 @@
 #include "utils.h"
 
 class Statement {
+  private:
+    QString name;
+
   public:
+    Exception* error = nullptr;
     Statement();
+    Statement(QString n);
     static Statement* parse(const QString statement);
     virtual void execute(Runtime& context) const;
     virtual const QString ast() const;
@@ -25,6 +30,7 @@ class RemarkStatement: public Statement {
   public:
     RemarkStatement(const QString b): body(b) {
     }
+    void execute(Runtime& context) const override;
     const QString ast() const override;
 };
 
@@ -64,13 +70,13 @@ class InputStatement: public Statement {
 
 class GotoStatement: public Statement {
   private:
-    int destination;
+    const QString destination;
 
   public:
     GotoStatement(const QString body);
     void execute(Runtime& context) const override;
     const QString ast() const override;
-    int getDestination() const;
+    QString getDestination() const;
 };
 
 class IfStatement: public Statement {

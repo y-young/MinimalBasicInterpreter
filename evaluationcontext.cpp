@@ -7,7 +7,7 @@ int EvaluationContext::getValue(QString identifier) const {
     QMap<QString, int>::const_iterator result;
     result = symbols.find(identifier);
     if (result == symbols.end()) {
-        throw RuntimeError("Undefined variable: " + identifier);
+        throw new RuntimeError("Undefined variable: " + identifier);
     }
     return result.value();
 }

@@ -10,13 +10,13 @@ const QPair<int, QString> Program::parseLine(QString line) const {
     bool ok;
     lineNo = lineStr.toInt(&ok);
     if (!ok) {
-        SyntaxError error("Wrong line number format \"" + lineStr + "\"");
-        error.setContext(line);
+        SyntaxError* error = new SyntaxError("Wrong line number format \"" + lineStr + "\"");
+        error->setContext(line);
         throw error;
     }
     if (lineNo <= 0 || lineNo > 1000000) {
-        SyntaxError error("Line number should be a positive integer below 1000000");
-        error.setContext(line);
+        SyntaxError* error = new SyntaxError("Line number should be a positive integer below 1000000");
+        error->setContext(line);
         throw error;
     }
     QString content = line.simplified().section(' ', 1, -1);
@@ -52,13 +52,16 @@ void Program::stepExecute() {
     // execute single statement
     int lineNo = context.pc.key();
     QString line = context.pc.value();
-    qDebug() << lineNo;
+    qDebug() << "executing line " << lineNo;
     try {
         const Statement* instruction = Statement::parse(line);
+        if (instruction->error) {
+            throw instruction->error;
+        }
         instruction->execute(context);
-    } catch (Exception& error) {
+    } catch (Exception* error) {
         context.status = HALT;
-        error.setContext(QString("%1 %2").arg(lineNo).arg(line));
+        error->setContext(QString("%1 %2").arg(lineNo).arg(line));
         throw;
         return;
     }
@@ -74,7 +77,7 @@ void Program::run() {
         if (context.status == GOTO) {
             context.pc = data.constFind(context.gotoDst);
             if (context.pc == data.constEnd()) {
-                throw RuntimeError(QString("Jump destination \"%1\" doesn't exist").arg(context.gotoDst));
+                throw new RuntimeError(QString("Jump destination \"%1\" doesn't exist").arg(context.gotoDst));
             }
             context.status = OK;
             context.gotoDst = 0;
@@ -85,7 +88,7 @@ void Program::run() {
 
 void Program::start() {
     if (data.empty()) {
-        throw Exception("No program to run");
+        throw new Exception("No program to run");
     }
     context.pc = data.constBegin();
     context.status = OK;
@@ -100,8 +103,8 @@ void Program::input(QString identifier, int value) {
     context.status = OK;
     try {
         run();
-    } catch (const Exception& error) {
-        showErrorMessage(error);
+    } catch (Exception* error) {
+        showErrorMessage(*error);
     }
 }
 

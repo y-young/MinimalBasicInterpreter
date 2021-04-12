@@ -3,6 +3,9 @@
 Statement::Statement() {
 }
 
+Statement::Statement(QString n): name(n) {
+}
+
 Statement* Statement::parse(const QString statement) {
     QString name = statement.split(' ')[0];
     QString body = statement.section(' ', 1);
@@ -22,14 +25,15 @@ Statement* Statement::parse(const QString statement) {
     } else if (name == "END") {
         return new EndStatement();
     }
-    throw SyntaxError(QString("Unknown statement type \"%1\"").arg(name));
+    return new Statement(name);
 }
 
 void Statement::execute(Runtime&) const {
+    throw new SyntaxError(QString("Unknown statement type \"%1\"").arg(name));
 }
 
 const QString Statement::ast() const {
-    return "";
+    return name;
 }
 
 Statement::~Statement() {
@@ -40,12 +44,25 @@ const QString RemarkStatement::ast() const {
     return QString("REM\n    " + body);
 }
 
+void RemarkStatement::execute(Runtime&) const {
+    return;
+}
+
 // LET
 LetStatement::LetStatement(const QString body) {
-    expression = Expression::parse(body);
+    try {
+        expression = Expression::parse(body);
+    } catch (Exception* exception) {
+        error = exception;
+        return;
+    }
+    if (expression->error) {
+        error = expression->error;
+        return;
+    }
     // ensure an assignment expression
     if (expression->getType() != COMPOUND_EXP || static_cast<const CompoundExpression*>(expression)->getOp() != "=") {
-        throw SyntaxError(QString("Invalid expression \"%1\" for LET statement").arg(body));
+        error = new SyntaxError(QString("Invalid expression \"%1\" for LET statement").arg(body));
     }
 }
 
@@ -54,6 +71,9 @@ void LetStatement::execute(Runtime& context) const {
 }
 
 const QString LetStatement::ast() const {
+    if (error) {
+        return "ERROR";
+    }
     return "LET " + expression->ast();
 }
 
@@ -63,7 +83,13 @@ LetStatement::~LetStatement() {
 
 // PRINT
 PrintStatement::PrintStatement(const QString body) {
-    expression = Expression::parse(body);
+    try {
+        expression = Expression::parse(body);
+    } catch (Exception* exception) {
+        error = exception;
+        return;
+    }
+    error = expression->error;
 }
 
 void PrintStatement::execute(Runtime& context) const {
@@ -72,6 +98,9 @@ void PrintStatement::execute(Runtime& context) const {
 }
 
 const QString PrintStatement::ast() const {
+    if (error) {
+        return "ERROR";
+    }
     return "PRINT" + indent("\n" + expression->ast());
 }
 
@@ -81,14 +110,14 @@ PrintStatement::~PrintStatement() {
 
 // INPUT
 InputStatement::InputStatement(const QString body): identifier(body) {
-    // ensure an identifier expression
-    const Expression* expression = Expression::parse(identifier);
-    if (expression->getType() != IDENTIFIER_EXP) {
-        throw SyntaxError(QString("Invalid idenitfier \"%1\" for INPUT statement").arg(body));
-    }
 }
 
 void InputStatement::execute(Runtime& context) const {
+    // ensure an identifier expression
+    const Expression* expression = Expression::parse(identifier);
+    if (expression->getType() != IDENTIFIER_EXP) {
+        throw new SyntaxError(QString("Invalid identifier \"%1\" for INPUT statement").arg(identifier));
+    }
     context.io.input(identifier);
     if (context.status == OK) { // Console input
         context.status = INTERRUPT;
@@ -96,28 +125,34 @@ void InputStatement::execute(Runtime& context) const {
 }
 
 const QString InputStatement::ast() const {
+    if (error) {
+        return "ERROR";
+    }
     return QString("INPUT\n    " + identifier);
 }
 
 // GOTO
-GotoStatement::GotoStatement(const QString body) {
-    bool ok;
-    destination = body.toInt(&ok);
-    if (!ok) {
-        throw SyntaxError(QString("Invalid jump destination \"%1\"").arg(body));
-    }
+GotoStatement::GotoStatement(const QString body): destination(body.trimmed()) {
 }
 
 void GotoStatement::execute(Runtime& context) const {
+    bool ok;
+    int dest = destination.toInt(&ok);
+    if (!ok) {
+        throw new SyntaxError(QString("Invalid jump destination \"%1\"").arg(destination));
+    }
     context.status = GOTO;
-    context.gotoDst = destination;
+    context.gotoDst = dest;
 }
 
-int GotoStatement::getDestination() const {
+QString GotoStatement::getDestination() const {
     return destination;
 }
 
 const QString GotoStatement::ast() const {
+    if (error) {
+        return "ERROR";
+    }
     return QString("GOTO\n    %1").arg(destination);
 }
 
@@ -125,12 +160,22 @@ const QString GotoStatement::ast() const {
 IfStatement::IfStatement(const QString body) {
     int indexOfThen = body.indexOf("THEN");
     if (indexOfThen == -1) {
-        throw SyntaxError("Missing THEN clause for IF statement");
+        error = new SyntaxError("Missing THEN clause for IF statement");
+        return;
     }
     gotoStmt = new GotoStatement(body.mid(indexOfThen + 4));
     int indexOfOp = parseCondition(body);
-    lhs = Expression::parse(body.left(indexOfOp));
-    rhs = Expression::parse(body.mid(indexOfOp + 1, indexOfThen - indexOfOp - 1));
+    if (error) {
+        return;
+    }
+    try {
+        lhs = Expression::parse(body.left(indexOfOp));
+        rhs = Expression::parse(body.mid(indexOfOp + 1, indexOfThen - indexOfOp - 1));
+    } catch (Exception* exception) {
+        error = exception;
+        return;
+    }
+    error = lhs->error ? lhs->error : rhs->error;
 }
 
 void IfStatement::execute(Runtime& context) const {
@@ -143,6 +188,9 @@ void IfStatement::execute(Runtime& context) const {
 }
 
 const QString IfStatement::ast() const {
+    if (error) {
+        return "ERROR";
+    }
     return QString("IF THEN\n    %1\n    %2\n    %3\n    %4")
         .arg(lhs->ast())
         .arg(conditionOp)
@@ -167,7 +215,8 @@ int IfStatement::parseCondition(const QString condition) {
         conditionOp = '>';
         return index;
     }
-    throw SyntaxError("Invalid condition operator for IF statement");
+    error = new SyntaxError("Invalid condition operator for IF statement");
+    return -1;
 }
 
 IfStatement::~IfStatement() {

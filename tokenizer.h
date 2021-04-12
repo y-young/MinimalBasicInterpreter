@@ -31,7 +31,7 @@ class Tokenizer {
 
   public:
     Tokenizer(const QString& exp);
-    QList<const Token*>* tokenize();
+    QList<const Token*>* tokenize(Exception** error);
     QString toString() const;
     ~Tokenizer();
 };

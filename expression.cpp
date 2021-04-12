@@ -8,7 +8,11 @@ Expression::Expression() {
 
 const Expression* Expression::parse(const QString expression) {
     Tokenizer parser(expression);
-    QList<const Token*>* tokens = parser.tokenize();
+    Exception* error = nullptr;
+    QList<const Token*>* tokens = parser.tokenize(&error);
+    if (error) {
+        return new Expression(error);
+    }
     qDebug() << parser.toString();
     QStack<const Token*> operators;
     QStack<const Expression*> operands;
@@ -26,12 +30,15 @@ const Expression* Expression::parse(const QString expression) {
                     const Expression *rhs = operands.empty() ? nullptr : operands.pop(),
                                      *lhs = operands.empty() ? nullptr : operands.pop();
                     if (!rhs || !lhs) {
-                        throw SyntaxError(QString("Missing operands for operator ").arg(op->content));
+                        const CompoundExpression* expr = new CompoundExpression(
+                            new SyntaxError(QString("Missing operands for operator ").arg(op->content)));
+                        return expr;
                     }
                     operands.push(new CompoundExpression(op->content, lhs, rhs));
                 }
                 if (!hasLeftBracket) {
-                    throw SyntaxError("Missing \"(\"");
+                    const CompoundExpression* expr = new CompoundExpression(new SyntaxError("Missing \"(\""));
+                    return expr;
                 }
                 break;
             } else if (token->content == "(") {
@@ -41,7 +48,9 @@ const Expression* Expression::parse(const QString expression) {
                     const Expression *rhs = operands.empty() ? nullptr : operands.pop(),
                                      *lhs = operands.empty() ? nullptr : operands.pop();
                     if (!rhs || !lhs) {
-                        throw SyntaxError(QString("Missing operands for operator ").arg(token->content));
+                        const CompoundExpression* expr = new CompoundExpression(
+                            new SyntaxError(QString("Missing operands for operator ").arg(token->content)));
+                        return expr;
                     }
                     operands.push(new CompoundExpression(operators.pop()->content, lhs, rhs));
                 }
@@ -65,14 +74,18 @@ const Expression* Expression::parse(const QString expression) {
                          *lhs = operands.empty() ? nullptr : operands.pop();
         if (!rhs || !lhs) {
             if (op->content == "(") {
-                throw SyntaxError("Missing \")\"");
+                const CompoundExpression* expr = new CompoundExpression(new SyntaxError("Missing \")\""));
+                return expr;
             }
-            throw SyntaxError(QString("Missing operands for operator ").arg(op->content));
+            const CompoundExpression* expr =
+                new CompoundExpression(new SyntaxError(QString("Missing operands for operator ").arg(op->content)));
+            return expr;
         }
         operands.push(new CompoundExpression(op->content, lhs, rhs));
     }
     if (operands.empty()) {
-        throw SyntaxError("Missing expression");
+        const Expression* expr = new Expression(new SyntaxError("Missing expression"));
+        return expr;
     }
     return operands.pop();
 }
@@ -176,11 +189,11 @@ int CompoundExpression::evaluate(Runtime& context) const {
     }
     if (op == "/") {
         if (right == 0) {
-            throw RuntimeError("Division by 0");
+            throw new RuntimeError("Division by 0");
         }
         return left / right;
     }
-    throw SyntaxError("Illegal operator in expression");
+    throw new SyntaxError("Illegal operator in expression");
     return 0;
 }
 
