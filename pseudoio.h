@@ -15,13 +15,14 @@ class PseudoIO: public QObject {
     QTextBrowser* codeDisplay = nullptr;
     QTextBrowser* outputDisplay = nullptr;
     QTextBrowser* astDisplay = nullptr;
+    QTextBrowser* stateDisplay = nullptr;
     QLineEdit* commandInput = nullptr;
     bool awaitingInput = false;
     QString awaitingIdentifier;
     void handleInput();
 
   public:
-    PseudoIO(QTextBrowser* code, QTextBrowser* output, QTextBrowser* ast, QLineEdit* command);
+    PseudoIO(QTextBrowser* code, QTextBrowser* output, QTextBrowser* ast, QTextBrowser* state, QLineEdit* command);
     void requestInput(QString identifier);
     void finishInput(QString stream);
     void output(int value) const;
@@ -29,10 +30,12 @@ class PseudoIO: public QObject {
     void setCode(QString code) const;
     void setErrorLines(const QList<int>& positions) const;
     void setAst(QString ast) const;
+    void setState(QString state) const;
     void clear() const;
     void clearOutput() const;
     void clearAst() const;
     void clearInput() const;
+    void clearState() const;
     void clearHightlights() const;
 
   signals:

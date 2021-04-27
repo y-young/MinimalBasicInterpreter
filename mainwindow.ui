@@ -34,7 +34,7 @@
       <number>10</number>
      </property>
      <item>
-      <layout class="QGridLayout" name="CodeOutputLabel">
+      <layout class="QGridLayout" name="GridLayout">
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -50,15 +50,15 @@
        <property name="verticalSpacing">
         <number>10</number>
        </property>
-       <item row="0" column="0">
-        <widget class="QLabel" name="CodeLabel">
+       <item row="3" column="0">
+        <widget class="QLabel" name="ASTLabel">
          <property name="font">
           <font>
-           <family>Microsoft YaHei UI</family>
+           <family>Microsoft YaHei</family>
           </font>
          </property>
          <property name="text">
-          <string>代码</string>
+          <string>语句与语法树</string>
          </property>
         </widget>
        </item>
@@ -81,38 +81,66 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="CodeLabel">
+         <property name="font">
+          <font>
+           <family>Microsoft YaHei UI</family>
+          </font>
+         </property>
+         <property name="text">
+          <string>代码</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="1">
         <widget class="QTextBrowser" name="OutputDisplay"/>
        </item>
+       <item row="4" column="0">
+        <widget class="QTextBrowser" name="ASTDisplay">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>300</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>300</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="StateLabel">
+         <property name="font">
+          <font>
+           <family>Microsoft YaHei</family>
+          </font>
+         </property>
+         <property name="text">
+          <string>当前变量</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QTextBrowser" name="StateDisplay">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>300</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>300</height>
+          </size>
+         </property>
+        </widget>
+       </item>
       </layout>
-     </item>
-     <item>
-      <widget class="QLabel" name="ASTLabel">
-       <property name="font">
-        <font>
-         <family>Microsoft YaHei</family>
-        </font>
-       </property>
-       <property name="text">
-        <string>语句与语法树</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QTextBrowser" name="ASTDisplay">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>300</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>300</height>
-        </size>
-       </property>
-      </widget>
      </item>
      <item>
       <layout class="QHBoxLayout" name="ButtonLayout">
@@ -143,7 +171,7 @@
           </size>
          </property>
          <property name="text">
-          <string>加载代码（LOAD）</string>
+          <string>载入代码（LOAD）</string>
          </property>
         </widget>
        </item>
@@ -166,6 +194,28 @@
          </property>
          <property name="text">
           <string>执行代码（RUN）</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="DebugButton">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>调试/单步（DEBUG/STEP）</string>
          </property>
         </widget>
        </item>

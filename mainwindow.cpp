@@ -3,7 +3,7 @@
 
 MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    io = new PseudoIO(ui->CodeDisplay, ui->OutputDisplay, ui->ASTDisplay, ui->CommandInput);
+    io = new PseudoIO(ui->CodeDisplay, ui->OutputDisplay, ui->ASTDisplay, ui->StateDisplay, ui->CommandInput);
     program = new Program(io);
     connect(ui->LoadButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::load));
     connect(ui->RunButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::run));
@@ -14,12 +14,14 @@ MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWin
 
 void MainWindow::run() {
     io->clearOutput();
+    io->clearState();
     program->printAst();
     try {
         program->start();
     } catch (Exception* error) {
         showErrorMessage(*error);
     }
+    program->printState();
 }
 
 void MainWindow::load() {

@@ -19,3 +19,12 @@ void EvaluationContext::setValue(QString identifier, int value) {
 void EvaluationContext::clear() {
     symbols.clear();
 }
+
+QString EvaluationContext::toString() const {
+    QString content;
+    QMap<QString, int>::const_iterator i;
+    for (i = symbols.constBegin(); i != symbols.constEnd(); ++i) {
+        content += QString("%1: INT = %2\n").arg(i.key()).arg(i.value());
+    }
+    return content;
+}

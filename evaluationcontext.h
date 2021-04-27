@@ -15,6 +15,7 @@ class EvaluationContext {
     int getValue(QString identifier) const;
     void setValue(QString identifier, int value);
     void clear();
+    QString toString() const;
 };
 
 #endif // EVALUATIONCONTEXT_H

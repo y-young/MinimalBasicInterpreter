@@ -2,8 +2,8 @@
 
 #include <QDebug>
 
-PseudoIO::PseudoIO(QTextBrowser* code, QTextBrowser* output, QTextBrowser* ast, QLineEdit* command)
-    : codeDisplay(code), outputDisplay(output), astDisplay(ast), commandInput(command) {
+PseudoIO::PseudoIO(QTextBrowser* code, QTextBrowser* output, QTextBrowser* ast, QTextBrowser* state, QLineEdit* command)
+    : codeDisplay(code), outputDisplay(output), astDisplay(ast), stateDisplay(state), commandInput(command) {
     connect(commandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&PseudoIO::handleInput));
     commandInput->setFocus();
 }
@@ -67,6 +67,10 @@ void PseudoIO::setCode(QString code) const {
     clearHightlights();
 }
 
+void PseudoIO::setState(QString state) const {
+    stateDisplay->setText(state);
+}
+
 void PseudoIO::setErrorLines(const QList<int>& positions) const {
     QTextCursor cursor(codeDisplay->document());
     QList<QTextEdit::ExtraSelection> highlights;
@@ -91,6 +95,7 @@ void PseudoIO::clear() const {
     codeDisplay->clear();
     outputDisplay->clear();
     astDisplay->clear();
+    stateDisplay->clear();
 }
 
 void PseudoIO::clearOutput() const {
@@ -103,6 +108,10 @@ void PseudoIO::clearAst() const {
 
 void PseudoIO::clearInput() const {
     commandInput->clear();
+}
+
+void PseudoIO::clearState() const {
+    stateDisplay->clear();
 }
 
 void PseudoIO::clearHightlights() const {

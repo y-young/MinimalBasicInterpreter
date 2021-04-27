@@ -146,6 +146,11 @@ void Program::printCode() const {
     context->io->setCode(content);
 }
 
+void Program::printState() const {
+    EvaluationContext symbols = context->symbols;
+    context->io->setState(symbols.toString());
+}
+
 Runtime* Program::getContext() {
     return context;
 }
