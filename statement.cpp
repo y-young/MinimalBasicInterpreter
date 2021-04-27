@@ -118,7 +118,7 @@ void InputStatement::execute(Runtime* context) const {
     if (expression->getType() != IDENTIFIER_EXP) {
         throw new SyntaxError(QString("Invalid identifier \"%1\" for INPUT statement").arg(identifier));
     }
-    context->io->input(identifier);
+    context->io->requestInput(identifier);
     if (context->status == OK) { // Console input
         context->status = INTERRUPT;
     }

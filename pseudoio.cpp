@@ -2,29 +2,63 @@
 
 #include <QDebug>
 
-PseudoIO::PseudoIO(QTextBrowser* code, QTextBrowser* output, QTextBrowser* ast)
-    : codeDisplay(code), outputDisplay(output), astDisplay(ast) {
+PseudoIO::PseudoIO(QTextBrowser* code, QTextBrowser* output, QTextBrowser* ast, QLineEdit* command)
+    : codeDisplay(code), outputDisplay(output), astDisplay(ast), commandInput(command) {
+    connect(commandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&PseudoIO::handleInput));
+    commandInput->setFocus();
 }
 
-void PseudoIO::input(QString identifier) {
-    emit requestInput(identifier);
+// Program requested input
+void PseudoIO::requestInput(QString identifier) {
+    commandInput->setText("? ");
+    commandInput->setFocus();
+    awaitingInput = true;
+    awaitingIdentifier = identifier;
 }
 
-void PseudoIO::input(QString identifier, QString stream) {
+// User pressed enter in command input box
+void PseudoIO::handleInput() {
+    QString stream = commandInput->text();
+    if (stream.isEmpty()) {
+        return;
+    }
+    if (!awaitingInput) { // Treat as command
+        emit receivedCommand(stream);
+        return;
+    }
+    // Handle input requested by program
+    if (!stream.startsWith("? ")) {
+        commandInput->setText("? ");
+        return;
+    }
+    commandInput->clear();
+    stream = stream.section(' ', 1); // Get actual input value
+    finishInput(stream);
+}
+
+// Pass input back to program
+void PseudoIO::finishInput(QString stream) {
     int userInput;
     bool ok;
     userInput = stream.toInt(&ok);
     if (!ok) {
         // Invalid input, retry
-        emit requestInput(identifier);
+        requestInput(awaitingIdentifier);
         return;
     }
-    emit receivedInput(identifier, userInput);
+    // Emit signal to program
+    emit receivedInput(awaitingIdentifier, userInput);
+    awaitingInput = false;
 }
 
+// Program produced output
 void PseudoIO::output(int value) const {
     QString content;
     content.setNum(value);
+    output(content);
+}
+
+void PseudoIO::output(QString content) const {
     outputDisplay->append(content);
 }
 
@@ -48,4 +82,8 @@ void PseudoIO::clearOutput() const {
 
 void PseudoIO::clearAst() const {
     astDisplay->clear();
+}
+
+void PseudoIO::clearInput() const {
+    commandInput->clear();
 }

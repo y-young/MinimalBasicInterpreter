@@ -36,9 +36,6 @@ class MainWindow: public QMainWindow {
     void run();
     void clear();
     void showHelp();
-    void executeCommand();
-    void awaitInput(QString identifier);
-    void writeOutput(QString content);
-    void handleInput(QString stream);
+    void executeCommand(QString command);
 };
 #endif // MAINWINDOW_H

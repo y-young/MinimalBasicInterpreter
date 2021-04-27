@@ -3,15 +3,13 @@
 
 MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    io = new PseudoIO(ui->CodeDisplay, ui->OutputDisplay, ui->ASTDisplay);
+    io = new PseudoIO(ui->CodeDisplay, ui->OutputDisplay, ui->ASTDisplay, ui->CommandInput);
     program = new Program(io);
-    ui->CommandInput->setFocus();
     connect(ui->LoadButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::load));
     connect(ui->RunButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::run));
     connect(ui->ClearButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::clear));
-    connect(ui->CommandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&MainWindow::executeCommand));
 
-    connect(io, &PseudoIO::requestInput, this, &MainWindow::awaitInput);
+    connect(io, &PseudoIO::receivedCommand, this, &MainWindow::executeCommand);
 }
 
 void MainWindow::run() {
@@ -55,14 +53,10 @@ void MainWindow::showHelp() {
     msgBox.exec();
 }
 
-void MainWindow::executeCommand() {
-    QString command = ui->CommandInput->text();
-    if (command.isEmpty()) {
-        return;
-    }
-
-    ui->CommandInput->clear();
-
+void MainWindow::executeCommand(QString command) {
+    // If this is executed by PseudoIO after emitting signal,
+    // the input prompt will be cleared after program requested input.
+    io->clearInput();
     try {
         if (command == "RUN") {
             run();
@@ -85,28 +79,6 @@ void MainWindow::executeCommand() {
     } catch (Exception* error) {
         showErrorMessage(*error);
     }
-}
-
-void MainWindow::awaitInput(QString identifier) {
-    ui->CommandInput->setText("? ");
-    ui->CommandInput->setFocus();
-    // Detach command input stream & Attach program input stream
-    disconnect(ui->CommandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&MainWindow::executeCommand));
-    connect(ui->CommandInput, &QLineEdit::returnPressed, this, [=]() { this->handleInput(identifier); });
-}
-
-void MainWindow::handleInput(QString identifier) {
-    QString stream = ui->CommandInput->text();
-    if (!stream.startsWith("? ")) {
-        ui->CommandInput->setText("? ");
-        return;
-    }
-    ui->CommandInput->clear();
-    // Detach program input stream & Reattach command input stream
-    disconnect(ui->CommandInput, &QLineEdit::returnPressed, nullptr, nullptr);
-    connect(ui->CommandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&MainWindow::executeCommand));
-    stream = stream.section(' ', 1); // Get actual input value
-    io->input(identifier, stream);
 }
 
 MainWindow::~MainWindow() {
