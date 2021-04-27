@@ -1,7 +1,8 @@
 #include "program.h"
 
-Program::Program() {
-    connect(&context.io, &PseudoIO::receivedInput, this, QOverload<QString, int>::of(&Program::input));
+Program::Program(PseudoIO* io) {
+    context = new Runtime(io);
+    connect(context->io, &PseudoIO::receivedInput, this, QOverload<QString, int>::of(&Program::input));
 }
 
 const QPair<int, QString> Program::parseLine(QString line) const {
@@ -33,6 +34,7 @@ void Program::edit(QString command) {
     } else {
         data.insert(line, content);
     }
+    context->io->setCode(text());
 }
 
 void Program::load(QString filename) {
@@ -46,12 +48,13 @@ void Program::load(QString filename) {
         edit(in.readLine());
     }
     file.close();
+    context->io->setCode(text());
 }
 
 void Program::stepExecute() {
     // execute single statement
-    int lineNo = context.pc.key();
-    QString line = context.pc.value();
+    int lineNo = context->pc.key();
+    QString line = context->pc.value();
     qDebug() << "executing line " << lineNo;
     try {
         const Statement* instruction = Statement::parse(line);
@@ -60,27 +63,27 @@ void Program::stepExecute() {
         }
         instruction->execute(context);
     } catch (Exception* error) {
-        context.status = HALT;
+        context->status = HALT;
         error->setContext(QString("%1 %2").arg(lineNo).arg(line));
         throw;
         return;
     }
-    ++context.pc;
-    if (context.pc == data.constEnd() && context.status != GOTO) {
-        context.status = HALT;
+    ++context->pc;
+    if (context->pc == data.constEnd() && context->status != GOTO) {
+        context->status = HALT;
     }
 }
 
 void Program::run() {
-    while (context.status != INTERRUPT && context.status != HALT) {
+    while (context->status != INTERRUPT && context->status != HALT) {
         // handle goto statements, find corresponding const_iterator
-        if (context.status == GOTO) {
-            context.pc = data.constFind(context.gotoDst);
-            if (context.pc == data.constEnd()) {
-                throw new RuntimeError(QString("Jump destination \"%1\" doesn't exist").arg(context.gotoDst));
+        if (context->status == GOTO) {
+            context->pc = data.constFind(context->gotoDst);
+            if (context->pc == data.constEnd()) {
+                throw new RuntimeError(QString("Jump destination \"%1\" doesn't exist").arg(context->gotoDst));
             }
-            context.status = OK;
-            context.gotoDst = 0;
+            context->status = OK;
+            context->gotoDst = 0;
         }
         stepExecute();
     }
@@ -90,17 +93,17 @@ void Program::start() {
     if (data.empty()) {
         throw new Exception("No program to run");
     }
-    context.pc = data.constBegin();
-    context.status = OK;
+    context->pc = data.constBegin();
+    context->status = OK;
     run();
 }
 
 void Program::input(QString identifier, int value) {
-    context.symbols.setValue(identifier, value);
-    if (context.status != INTERRUPT) { // Console input
+    context->symbols.setValue(identifier, value);
+    if (context->status != INTERRUPT) { // Console input
         return;
     }
-    context.status = OK;
+    context->status = OK;
     try {
         run();
     } catch (Exception* error) {
@@ -108,7 +111,7 @@ void Program::input(QString identifier, int value) {
     }
 }
 
-QString Program::printAst() const {
+void Program::printAst() const {
     QMap<int, QString>::const_iterator i;
     QString ast;
     Statement const* instruction;
@@ -116,12 +119,12 @@ QString Program::printAst() const {
         instruction = Statement::parse(i.value());
         ast += QString("%1 %2\n").arg(i.key()).arg(instruction->ast());
     }
-    return ast;
+    context->io->setAst(ast);
 }
 
 void Program::clear() {
     data.clear();
-    context.reset();
+    context->reset();
 }
 
 const QString Program::text() const {
@@ -133,10 +136,10 @@ const QString Program::text() const {
     return content;
 }
 
-PseudoIO& Program::io() {
-    return context.io;
+Runtime* Program::getContext() {
+    return context;
 }
 
-Runtime* Program::getContext() {
-    return &context;
+Program::~Program() {
+    delete context;
 }

@@ -18,7 +18,7 @@ class Statement {
     Statement();
     Statement(QString n);
     static Statement* parse(const QString statement);
-    virtual void execute(Runtime& context) const;
+    virtual void execute(Runtime* context) const;
     virtual const QString ast() const;
     virtual ~Statement();
 };
@@ -30,7 +30,7 @@ class RemarkStatement: public Statement {
   public:
     RemarkStatement(const QString b): body(b) {
     }
-    void execute(Runtime& context) const override;
+    void execute(Runtime* context) const override;
     const QString ast() const override;
 };
 
@@ -40,7 +40,7 @@ class LetStatement: public Statement {
 
   public:
     LetStatement(const QString body);
-    void execute(Runtime& context) const override;
+    void execute(Runtime* context) const override;
     const QString ast() const override;
     ~LetStatement();
 };
@@ -53,7 +53,7 @@ class PrintStatement: public Statement {
 
   public:
     PrintStatement(const QString body);
-    void execute(Runtime& context) const override;
+    void execute(Runtime* context) const override;
     const QString ast() const override;
     ~PrintStatement();
 };
@@ -64,7 +64,7 @@ class InputStatement: public Statement {
 
   public:
     InputStatement(const QString body);
-    void execute(Runtime& context) const override;
+    void execute(Runtime* context) const override;
     const QString ast() const override;
 };
 
@@ -74,7 +74,7 @@ class GotoStatement: public Statement {
 
   public:
     GotoStatement(const QString body);
-    void execute(Runtime& context) const override;
+    void execute(Runtime* context) const override;
     const QString ast() const override;
     QString getDestination() const;
 };
@@ -89,14 +89,14 @@ class IfStatement: public Statement {
 
   public:
     IfStatement(const QString body);
-    void execute(Runtime& context) const override;
+    void execute(Runtime* context) const override;
     const QString ast() const override;
     ~IfStatement();
 };
 
 class EndStatement: public Statement {
   public:
-    void execute(Runtime& context) const override;
+    void execute(Runtime* context) const override;
     const QString ast() const override;
 };
 

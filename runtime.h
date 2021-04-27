@@ -8,12 +8,12 @@ enum StatusCode { OK, INTERRUPT, GOTO, HALT };
 
 class Runtime {
   public:
-    PseudoIO io;
+    PseudoIO* io;
     EvaluationContext symbols;
     QMap<int, QString>::const_iterator pc = nullptr;
     int gotoDst;
     StatusCode status = HALT;
-    Runtime();
+    Runtime(PseudoIO* _io);
     void reset();
 };
 

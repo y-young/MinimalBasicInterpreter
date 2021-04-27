@@ -28,7 +28,7 @@ Statement* Statement::parse(const QString statement) {
     return new Statement(name);
 }
 
-void Statement::execute(Runtime&) const {
+void Statement::execute(Runtime*) const {
     throw new SyntaxError(QString("Unknown statement type \"%1\"").arg(name));
 }
 
@@ -44,7 +44,7 @@ const QString RemarkStatement::ast() const {
     return QString("REM\n    " + body);
 }
 
-void RemarkStatement::execute(Runtime&) const {
+void RemarkStatement::execute(Runtime*) const {
     return;
 }
 
@@ -66,7 +66,7 @@ LetStatement::LetStatement(const QString body) {
     }
 }
 
-void LetStatement::execute(Runtime& context) const {
+void LetStatement::execute(Runtime* context) const {
     expression->evaluate(context);
 }
 
@@ -92,9 +92,9 @@ PrintStatement::PrintStatement(const QString body) {
     error = expression->error;
 }
 
-void PrintStatement::execute(Runtime& context) const {
+void PrintStatement::execute(Runtime* context) const {
     int value = expression->evaluate(context);
-    context.io.output(value);
+    context->io->output(value);
 }
 
 const QString PrintStatement::ast() const {
@@ -112,15 +112,15 @@ PrintStatement::~PrintStatement() {
 InputStatement::InputStatement(const QString body): identifier(body) {
 }
 
-void InputStatement::execute(Runtime& context) const {
+void InputStatement::execute(Runtime* context) const {
     // ensure an identifier expression
     const Expression* expression = Expression::parse(identifier);
     if (expression->getType() != IDENTIFIER_EXP) {
         throw new SyntaxError(QString("Invalid identifier \"%1\" for INPUT statement").arg(identifier));
     }
-    context.io.input(identifier);
-    if (context.status == OK) { // Console input
-        context.status = INTERRUPT;
+    context->io->input(identifier);
+    if (context->status == OK) { // Console input
+        context->status = INTERRUPT;
     }
 }
 
@@ -135,14 +135,14 @@ const QString InputStatement::ast() const {
 GotoStatement::GotoStatement(const QString body): destination(body.trimmed()) {
 }
 
-void GotoStatement::execute(Runtime& context) const {
+void GotoStatement::execute(Runtime* context) const {
     bool ok;
     int dest = destination.toInt(&ok);
     if (!ok) {
         throw new SyntaxError(QString("Invalid jump destination \"%1\"").arg(destination));
     }
-    context.status = GOTO;
-    context.gotoDst = dest;
+    context->status = GOTO;
+    context->gotoDst = dest;
 }
 
 QString GotoStatement::getDestination() const {
@@ -178,7 +178,7 @@ IfStatement::IfStatement(const QString body) {
     error = lhs->error ? lhs->error : rhs->error;
 }
 
-void IfStatement::execute(Runtime& context) const {
+void IfStatement::execute(Runtime* context) const {
     int left = lhs->evaluate(context), right = rhs->evaluate(context);
     bool shouldJump = (conditionOp == '<' && left < right) || (conditionOp == '=' && left == right) ||
                       (conditionOp == '>' && left > right);
@@ -226,8 +226,8 @@ IfStatement::~IfStatement() {
 }
 
 // END
-void EndStatement::execute(Runtime& context) const {
-    context.status = HALT;
+void EndStatement::execute(Runtime* context) const {
+    context->status = HALT;
 }
 
 const QString EndStatement::ast() const {

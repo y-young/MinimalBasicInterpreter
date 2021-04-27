@@ -17,22 +17,22 @@ class Program: public QWidget {
     Q_OBJECT
   private:
     QMap<int, QString> data;
-    Runtime context;
+    Runtime* context = nullptr;
     const QPair<int, QString> parseLine(QString line) const;
     void stepExecute();
     void input(QString identifier, int value);
 
   public:
-    Program();
+    Program(PseudoIO* io);
     void edit(QString command);
     void load(QString filename);
     void run();
     void start();
-    QString printAst() const;
+    void printAst() const;
     void clear();
     const QString text() const;
-    PseudoIO& io();
     Runtime* getContext();
+    ~Program();
 };
 
 #endif // PROGRAM_H

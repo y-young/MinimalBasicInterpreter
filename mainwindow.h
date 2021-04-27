@@ -12,6 +12,7 @@
 
 #include "exceptions.h"
 #include "program.h"
+#include "pseudoio.h"
 #include "statement.h"
 
 QT_BEGIN_NAMESPACE
@@ -29,7 +30,8 @@ class MainWindow: public QMainWindow {
 
   private:
     Ui::MainWindow* ui;
-    Program* program;
+    PseudoIO* io = nullptr;
+    Program* program = nullptr;
     void load();
     void run();
     void clear();

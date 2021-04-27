@@ -90,7 +90,7 @@ const Expression* Expression::parse(const QString expression) {
     return operands.pop();
 }
 
-int Expression::evaluate(Runtime&) const {
+int Expression::evaluate(Runtime*) const {
     return 0;
 }
 
@@ -120,7 +120,7 @@ ConstantExpression::ConstantExpression(int val): value(val) {
 ConstantExpression::ConstantExpression(const Token* token): value(token->content.toInt()) {
 }
 
-int ConstantExpression::evaluate(Runtime&) const {
+int ConstantExpression::evaluate(Runtime*) const {
     return value;
 }
 
@@ -143,8 +143,8 @@ IdentifierExpression::IdentifierExpression(const QString i): identifier(i) {
 IdentifierExpression::IdentifierExpression(const Token* token): identifier(token->content) {
 }
 
-int IdentifierExpression::evaluate(Runtime& context) const {
-    return context.symbols.getValue(identifier);
+int IdentifierExpression::evaluate(Runtime* context) const {
+    return context->symbols.getValue(identifier);
 }
 
 QString IdentifierExpression::getIdentifierName() const {
@@ -168,10 +168,10 @@ CompoundExpression::CompoundExpression(const QString o, const Expression* l, con
     : op(o), lhs(l), rhs(r) {
 }
 
-int CompoundExpression::evaluate(Runtime& context) const {
+int CompoundExpression::evaluate(Runtime* context) const {
     int right = rhs->evaluate(context);
     if (op == "=") {
-        context.symbols.setValue(lhs->getIdentifierName(), right);
+        context->symbols.setValue(lhs->getIdentifierName(), right);
         return right;
     }
     int left = lhs->evaluate(context);

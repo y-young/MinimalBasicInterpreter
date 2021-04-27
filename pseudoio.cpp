@@ -2,7 +2,8 @@
 
 #include <QDebug>
 
-PseudoIO::PseudoIO() {
+PseudoIO::PseudoIO(QTextBrowser* code, QTextBrowser* output, QTextBrowser* ast)
+    : codeDisplay(code), outputDisplay(output), astDisplay(ast) {
 }
 
 void PseudoIO::input(QString identifier) {
@@ -24,9 +25,27 @@ void PseudoIO::input(QString identifier, QString stream) {
 void PseudoIO::output(int value) const {
     QString content;
     content.setNum(value);
-    output(content);
+    outputDisplay->append(content);
 }
 
-void PseudoIO::output(QString content) const {
-    emit printOutput(content);
+void PseudoIO::setCode(QString code) const {
+    codeDisplay->setText(code);
+}
+
+void PseudoIO::setAst(QString ast) const {
+    astDisplay->setText(ast);
+}
+
+void PseudoIO::clear() const {
+    codeDisplay->clear();
+    outputDisplay->clear();
+    astDisplay->clear();
+}
+
+void PseudoIO::clearOutput() const {
+    outputDisplay->clear();
+}
+
+void PseudoIO::clearAst() const {
+    astDisplay->clear();
 }

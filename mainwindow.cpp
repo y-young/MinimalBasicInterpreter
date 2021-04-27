@@ -3,21 +3,20 @@
 
 MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    program = new Program();
+    io = new PseudoIO(ui->CodeDisplay, ui->OutputDisplay, ui->ASTDisplay);
+    program = new Program(io);
     ui->CommandInput->setFocus();
     connect(ui->LoadButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::load));
     connect(ui->RunButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::run));
     connect(ui->ClearButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::clear));
     connect(ui->CommandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&MainWindow::executeCommand));
 
-    connect(&program->io(), &PseudoIO::printOutput, this, &MainWindow::writeOutput);
-    connect(&program->io(), &PseudoIO::requestInput, this, &MainWindow::awaitInput);
+    connect(io, &PseudoIO::requestInput, this, &MainWindow::awaitInput);
 }
 
 void MainWindow::run() {
-    ui->OutputDisplay->clear();
-    ui->ASTDisplay->clear();
-    ui->ASTDisplay->setText(program->printAst());
+    io->clearOutput();
+    program->printAst();
     try {
         program->start();
     } catch (Exception* error) {
@@ -35,14 +34,11 @@ void MainWindow::load() {
     } catch (Exception* error) {
         showErrorMessage(*error);
     }
-    ui->CodeDisplay->setText(program->text());
 }
 
 void MainWindow::clear() {
     program->clear();
-    ui->CodeDisplay->clear();
-    ui->OutputDisplay->clear();
-    ui->ASTDisplay->clear();
+    io->clear();
 }
 
 void MainWindow::showHelp() {
@@ -80,12 +76,11 @@ void MainWindow::executeCommand() {
             QApplication::exit(0);
         } else if (command.startsWith("PRINT") || command.startsWith("LET") || command.startsWith("INPUT")) {
             Statement* stmt = Statement::parse(command);
-            stmt->execute(*program->getContext());
+            stmt->execute(program->getContext());
         } else if (command == "LIST") {
             // do nothing
         } else {
             program->edit(command);
-            ui->CodeDisplay->setText(program->text());
         }
     } catch (Exception* error) {
         showErrorMessage(*error);
@@ -111,14 +106,11 @@ void MainWindow::handleInput(QString identifier) {
     disconnect(ui->CommandInput, &QLineEdit::returnPressed, nullptr, nullptr);
     connect(ui->CommandInput, &QLineEdit::returnPressed, this, QOverload<>::of(&MainWindow::executeCommand));
     stream = stream.section(' ', 1); // Get actual input value
-    program->io().input(identifier, stream);
-}
-
-void MainWindow::writeOutput(QString content) {
-    ui->OutputDisplay->append(content);
+    io->input(identifier, stream);
 }
 
 MainWindow::~MainWindow() {
     delete ui;
+    delete io;
     delete program;
 }

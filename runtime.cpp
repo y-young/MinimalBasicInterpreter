@@ -1,6 +1,6 @@
 #include "runtime.h"
 
-Runtime::Runtime() {
+Runtime::Runtime(PseudoIO* _io): io(_io) {
 }
 
 void Runtime::reset() {
