@@ -4,6 +4,7 @@ Statement::Statement() {
 }
 
 Statement::Statement(QString n): name(n) {
+    error = new SyntaxError(QString("Unknown statement type \"%1\"").arg(name));
 }
 
 Statement* Statement::parse(const QString statement) {
@@ -29,11 +30,11 @@ Statement* Statement::parse(const QString statement) {
 }
 
 void Statement::execute(Runtime*) const {
-    throw new SyntaxError(QString("Unknown statement type \"%1\"").arg(name));
+    throw error;
 }
 
 const QString Statement::ast() const {
-    return name;
+    return "ERROR";
 }
 
 Statement::~Statement() {
@@ -133,6 +134,9 @@ const QString InputStatement::ast() const {
 
 // GOTO
 GotoStatement::GotoStatement(const QString body): destination(body.trimmed()) {
+    if (destination.isEmpty()) {
+        error = new SyntaxError("Missing jump destination for GOTO statement");
+    }
 }
 
 void GotoStatement::execute(Runtime* context) const {

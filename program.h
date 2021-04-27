@@ -28,9 +28,9 @@ class Program: public QWidget {
     void load(QString filename);
     void run();
     void start();
-    void printAst() const;
     void clear();
-    const QString text() const;
+    void printCode() const;
+    void printAst() const;
     Runtime* getContext();
     ~Program();
 };

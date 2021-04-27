@@ -1,10 +1,13 @@
 #ifndef PSEUDOIO_H
 #define PSEUDOIO_H
 
+#include <QColor>
 #include <QLineEdit>
 #include <QObject>
 #include <QString>
 #include <QTextBrowser>
+
+const QColor CURRENT_HIGHLIGHT(100, 255, 100), ERROR_HIGHLIGHT(255, 100, 100);
 
 class PseudoIO: public QObject {
     Q_OBJECT
@@ -24,11 +27,13 @@ class PseudoIO: public QObject {
     void output(int value) const;
     void output(QString content) const;
     void setCode(QString code) const;
+    void setErrorLines(const QList<int>& positions) const;
     void setAst(QString ast) const;
     void clear() const;
     void clearOutput() const;
     void clearAst() const;
     void clearInput() const;
+    void clearHightlights() const;
 
   signals:
     void receivedInput(QString identifier, int input);

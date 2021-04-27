@@ -64,6 +64,23 @@ void PseudoIO::output(QString content) const {
 
 void PseudoIO::setCode(QString code) const {
     codeDisplay->setText(code);
+    clearHightlights();
+}
+
+void PseudoIO::setErrorLines(const QList<int>& positions) const {
+    QTextCursor cursor(codeDisplay->document());
+    QList<QTextEdit::ExtraSelection> highlights;
+    for (int position : positions) {
+        QTextEdit::ExtraSelection highlight;
+        highlight.cursor = cursor;
+        highlight.cursor.setPosition(position);
+        highlight.cursor.movePosition(QTextCursor::StartOfLine);
+        highlight.cursor.movePosition(QTextCursor::EndOfLine);
+        highlight.format.setProperty(QTextFormat::FullWidthSelection, true);
+        highlight.format.setBackground(ERROR_HIGHLIGHT);
+        highlights.append(highlight);
+    }
+    codeDisplay->setExtraSelections(highlights);
 }
 
 void PseudoIO::setAst(QString ast) const {
@@ -86,4 +103,9 @@ void PseudoIO::clearAst() const {
 
 void PseudoIO::clearInput() const {
     commandInput->clear();
+}
+
+void PseudoIO::clearHightlights() const {
+    QList<QTextEdit::ExtraSelection> highlights;
+    codeDisplay->setExtraSelections(highlights);
 }

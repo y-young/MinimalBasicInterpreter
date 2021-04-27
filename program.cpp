@@ -34,7 +34,7 @@ void Program::edit(QString command) {
     } else {
         data.insert(line, content);
     }
-    context->io->setCode(text());
+    printCode();
 }
 
 void Program::load(QString filename) {
@@ -48,7 +48,7 @@ void Program::load(QString filename) {
         edit(in.readLine());
     }
     file.close();
-    context->io->setCode(text());
+    printCode();
 }
 
 void Program::stepExecute() {
@@ -113,13 +113,23 @@ void Program::input(QString identifier, int value) {
 
 void Program::printAst() const {
     QMap<int, QString>::const_iterator i;
-    QString ast;
+    QString ast, line;
+    int position = 0, lineNo;
+    QList<int> errorPositions;
     Statement const* instruction;
     for (i = data.constBegin(); i != data.constEnd(); ++i) {
-        instruction = Statement::parse(i.value());
-        ast += QString("%1 %2\n").arg(i.key()).arg(instruction->ast());
+        lineNo = i.key();
+        line = i.value();
+        instruction = Statement::parse(line);
+        ast += QString("%1 %2\n").arg(lineNo).arg(instruction->ast());
+        if (instruction->error) {
+            errorPositions.append(position + 1);
+        }
+        // length of line number + statement + 1 whitespace + 1 '\0'
+        position += QString::number(lineNo).length() + line.length() + 2;
     }
     context->io->setAst(ast);
+    context->io->setErrorLines(errorPositions);
 }
 
 void Program::clear() {
@@ -127,13 +137,13 @@ void Program::clear() {
     context->reset();
 }
 
-const QString Program::text() const {
+void Program::printCode() const {
     QString content;
     QMap<int, QString>::const_iterator i;
     for (i = data.constBegin(); i != data.constEnd(); ++i) {
         content += QString("%1 %2\n").arg(i.key()).arg(i.value());
     }
-    return content;
+    context->io->setCode(content);
 }
 
 Runtime* Program::getContext() {
