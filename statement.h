@@ -47,8 +47,6 @@ class LetStatement: public Statement {
 
 class PrintStatement: public Statement {
   private:
-    // TODO: support expression
-    QString identifier;
     const Expression* expression;
 
   public:
@@ -56,6 +54,19 @@ class PrintStatement: public Statement {
     void execute(Runtime* context) const override;
     const QString ast() const override;
     ~PrintStatement();
+};
+
+class PrintfStatement: public Statement {
+  private:
+    QString formatString;
+    QList<const Expression*> args;
+    const QString pattern = "{}";
+
+  public:
+    PrintfStatement(const QString body);
+    void execute(Runtime* context) const override;
+    const QString ast() const override;
+    ~PrintfStatement();
 };
 
 class InputStatement: public Statement {

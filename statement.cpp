@@ -18,6 +18,8 @@ Statement* Statement::parse(const QString statement) {
         return new LetStatement(body);
     } else if (name == "PRINT") {
         return new PrintStatement(body);
+    } else if (name == "PRINTF") {
+        return new PrintfStatement(body);
     } else if (name == "INPUT") {
         return new InputStatement(body);
     } else if (name == "INPUTS") {
@@ -110,6 +112,73 @@ const QString PrintStatement::ast() const {
 
 PrintStatement::~PrintStatement() {
     delete expression;
+}
+
+// PRINTF
+
+PrintfStatement::PrintfStatement(const QString body) {
+    QList<QString> arguments = body.trimmed().split(',');
+    // Parse format string
+    if (arguments.size() < 1) {
+        error = new SyntaxError("Missing expression for PRINTF statement: " + body);
+        return;
+    }
+    const Expression* exp = Expression::parse(arguments.first().trimmed());
+    if (exp->getType() != CONST_EXP || !exp->ast().startsWith('"')) {
+        error = new SyntaxError("Invalid format string for PRINTF statement: " + formatString);
+        return;
+    }
+    formatString = exp->evaluate(nullptr)->toString();
+    arguments.pop_front();
+    // Parse arguments
+    for (QString argument : arguments) {
+        const Expression* arg;
+        try {
+            arg = Expression::parse(argument);
+        } catch (Exception* exception) {
+            error = exception;
+            return;
+        }
+        error = arg->error;
+        if (error) {
+            return;
+        }
+        args.append(arg);
+    }
+    // Validate number of arguments
+    int argCount = formatString.count(pattern);
+    if (argCount != args.size()) {
+        error = new SyntaxError(QString("Expecting %1 argument(s), found %2").arg(argCount).arg(args.size()));
+        return;
+    }
+}
+
+void PrintfStatement::execute(Runtime* context) const {
+    QString formattedString = formatString;
+    int index;
+    for (const Expression* arg : args) {
+        const Value* value = arg->evaluate(context);
+        index = formattedString.indexOf(pattern);
+        formattedString.replace(index, 2, value->toString());
+    }
+    context->io->output(formattedString);
+}
+
+const QString PrintfStatement::ast() const {
+    if (error) {
+        return "ERROR";
+    }
+    QString astString = "PRINTF" + indent("\n\"" + formatString + "\"");
+    for (const Expression* arg : args) {
+        astString += indent("\n" + arg->ast());
+    }
+    return astString;
+}
+
+PrintfStatement::~PrintfStatement() {
+    for (const Expression* arg : args) {
+        delete arg;
+    }
 }
 
 // INPUT

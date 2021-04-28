@@ -65,6 +65,10 @@ void PseudoIO::finishInput(QString input) {
 }
 
 // Program produced output
+void PseudoIO::output(const QString content) const {
+    outputDisplay->append(content);
+}
+
 void PseudoIO::output(const Value* value) const {
     outputDisplay->append(value->toString());
 }

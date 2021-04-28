@@ -30,6 +30,7 @@ class PseudoIO: public QObject {
     void requestInput(QString identifier);
     void requestStringInput();
     void finishInput(QString input);
+    void output(const QString content) const;
     void output(const Value* value) const;
     void setCode(QString code);
     void setCurrentLine(int position) const;
