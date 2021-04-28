@@ -97,6 +97,7 @@ void Program::run() {
             stepExecute();
         }
     }
+    exitDebug();
 }
 
 void Program::init() {
