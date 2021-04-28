@@ -26,6 +26,8 @@ class MainWindow: public QMainWindow {
 
   public:
     MainWindow(QWidget* parent = nullptr);
+    void enterDebug();
+    void exitDebug();
     ~MainWindow();
 
   private:
@@ -34,6 +36,7 @@ class MainWindow: public QMainWindow {
     Program* program = nullptr;
     void load();
     void run();
+    void debugStep();
     void clear();
     void showHelp();
     void executeCommand(QString command);

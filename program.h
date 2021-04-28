@@ -16,11 +16,20 @@
 class Program: public QWidget {
     Q_OBJECT
   private:
-    QMap<int, QString> data;
+    QMap<int, QString> code;
     Runtime* context = nullptr;
+    bool debug = false;
+    void init();
     const QPair<int, QString> parseLine(QString line) const;
+    void enterDebug();
+    void exitDebug();
     void stepExecute();
     void input(QString identifier, int value);
+    void highlightCurrentLine() const;
+    void printCurrentAst() const;
+    inline int lineLength(int lineNo, QString line) const;
+    int linePosition(const QMap<int, QString>::const_iterator& line) const;
+    inline QString lineAst(int lineNo, const Statement* instruction) const;
 
   public:
     Program(PseudoIO* io);
@@ -28,12 +37,17 @@ class Program: public QWidget {
     void load(QString filename);
     void run();
     void start();
+    void step();
     void clear();
     void printCode() const;
     void printAst() const;
     void printState() const;
     Runtime* getContext();
     ~Program();
+
+  signals:
+    void enteredDebug();
+    void exitedDebug();
 };
 
 #endif // PROGRAM_H

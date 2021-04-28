@@ -7,15 +7,18 @@ MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWin
     program = new Program(io);
     connect(ui->LoadButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::load));
     connect(ui->RunButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::run));
+    connect(ui->DebugButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::debugStep));
     connect(ui->ClearButton, &QPushButton::released, this, QOverload<>::of(&MainWindow::clear));
 
     connect(io, &PseudoIO::receivedCommand, this, &MainWindow::executeCommand);
+
+    connect(program, &Program::enteredDebug, this, QOverload<>::of(&MainWindow::enterDebug));
+    connect(program, &Program::exitedDebug, this, QOverload<>::of(&MainWindow::exitDebug));
 }
 
 void MainWindow::run() {
     io->clearOutput();
     io->clearState();
-    program->printAst();
     try {
         program->start();
     } catch (Exception* error) {
@@ -31,6 +34,14 @@ void MainWindow::load() {
     }
     try {
         program->load(filename);
+    } catch (Exception* error) {
+        showErrorMessage(*error);
+    }
+}
+
+void MainWindow::debugStep() {
+    try {
+        program->step();
     } catch (Exception* error) {
         showErrorMessage(*error);
     }
@@ -81,6 +92,18 @@ void MainWindow::executeCommand(QString command) {
     } catch (Exception* error) {
         showErrorMessage(*error);
     }
+}
+
+void MainWindow::enterDebug() {
+    ui->DebugButton->setText("单步（STEP）");
+    ui->LoadButton->setDisabled(true);
+    ui->ClearButton->setDisabled(true);
+}
+
+void MainWindow::exitDebug() {
+    ui->DebugButton->setText("调试（DEBUG）");
+    ui->LoadButton->setDisabled(false);
+    ui->ClearButton->setDisabled(false);
 }
 
 MainWindow::~MainWindow() {

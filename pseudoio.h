@@ -19,6 +19,7 @@ class PseudoIO: public QObject {
     QLineEdit* commandInput = nullptr;
     bool awaitingInput = false;
     QString awaitingIdentifier;
+    QList<QTextEdit::ExtraSelection> errorHighlights;
     void handleInput();
 
   public:
@@ -27,8 +28,10 @@ class PseudoIO: public QObject {
     void finishInput(QString stream);
     void output(int value) const;
     void output(QString content) const;
-    void setCode(QString code) const;
-    void setErrorLines(const QList<int>& positions) const;
+    void setCode(QString code);
+    void setCurrentLine(int position) const;
+    void setErrorLines(const QList<int>& positions);
+    void addErrorLine(int position);
     void setAst(QString ast) const;
     void setState(QString state) const;
     void clear() const;
@@ -36,7 +39,7 @@ class PseudoIO: public QObject {
     void clearAst() const;
     void clearInput() const;
     void clearState() const;
-    void clearHightlights() const;
+    void clearHightlights();
 
   signals:
     void receivedInput(QString identifier, int input);

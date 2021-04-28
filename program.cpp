@@ -30,9 +30,9 @@ void Program::edit(QString command) {
     QString content = result.second;
 
     if (content.isEmpty()) {
-        data.remove(line);
+        code.remove(line);
     } else {
-        data.insert(line, content);
+        code.insert(line, content);
     }
     printCode();
 }
@@ -51,56 +51,95 @@ void Program::load(QString filename) {
     printCode();
 }
 
+// Execute single statement
 void Program::stepExecute() {
-    // execute single statement
-    int lineNo = context->pc.key();
-    QString line = context->pc.value();
+    QMap<int, QString>::const_iterator currentLine = context->pc;
+    int lineNo = currentLine.key();
+    QString content = currentLine.value();
     qDebug() << "executing line " << lineNo;
     try {
-        const Statement* instruction = Statement::parse(line);
+        const Statement* instruction = Statement::parse(content);
         if (instruction->error) {
             throw instruction->error;
         }
         instruction->execute(context);
     } catch (Exception* error) {
         context->status = HALT;
-        error->setContext(QString("%1 %2").arg(lineNo).arg(line));
+        exitDebug();
+        error->setContext(QString("%1 %2").arg(lineNo).arg(content));
+        context->io->addErrorLine(linePosition(currentLine));
         throw;
-        return;
     }
     ++context->pc;
-    if (context->pc == data.constEnd() && context->status != GOTO) {
+    if (context->pc == code.constEnd() && context->status != GOTO) {
         context->status = HALT;
+    }
+    // Handle goto statements, find corresponding const_iterator
+    if (context->status == GOTO) {
+        QMap<int, QString>::const_iterator destination = code.constFind(context->gotoDst);
+        if (destination == code.constEnd()) {
+            context->io->addErrorLine(linePosition(context->pc - 1));
+            exitDebug();
+            throw new RuntimeError(QString("Jump destination \"%1\" doesn't exist").arg(context->gotoDst));
+        }
+        context->pc = destination;
+        context->status = OK;
+        context->gotoDst = 0;
     }
 }
 
 void Program::run() {
     while (context->status != INTERRUPT && context->status != HALT) {
-        // handle goto statements, find corresponding const_iterator
-        if (context->status == GOTO) {
-            context->pc = data.constFind(context->gotoDst);
-            if (context->pc == data.constEnd()) {
-                throw new RuntimeError(QString("Jump destination \"%1\" doesn't exist").arg(context->gotoDst));
-            }
-            context->status = OK;
-            context->gotoDst = 0;
+        if (debug) {
+            step();
+        } else {
+            stepExecute();
         }
-        stepExecute();
     }
 }
 
-void Program::start() {
-    if (data.empty()) {
+void Program::init() {
+    if (code.empty()) {
         throw new Exception("No program to run");
     }
-    context->pc = data.constBegin();
-    context->status = OK;
+    context->reset();
+    context->pc = code.constBegin();
+}
+
+void Program::start() {
+    if (!debug) {
+        init();
+        printAst();
+    }
     run();
+    printState();
+}
+
+void Program::step() {
+    if (!debug) {
+        context->io->clearOutput();
+        context->io->clearState();
+        init();
+        enterDebug();
+    } else {
+        if (context->status == INTERRUPT) { // Awaiting input
+            return;
+        }
+        if (context->status == HALT) { // Exited normally
+            exitDebug();
+            QMessageBox::information(this, "Debug", "Program exited normally.");
+            return;
+        }
+        stepExecute();
+        printState();
+    }
+    highlightCurrentLine();
+    printCurrentAst();
 }
 
 void Program::input(QString identifier, int value) {
     context->symbols.setValue(identifier, value);
-    if (context->status != INTERRUPT) { // Console input
+    if (context->status != INTERRUPT) { // Not awaiting input
         return;
     }
     context->status = OK;
@@ -111,39 +150,47 @@ void Program::input(QString identifier, int value) {
     }
 }
 
-void Program::printAst() const {
-    QMap<int, QString>::const_iterator i;
-    QString ast, line;
-    int position = 0, lineNo;
-    QList<int> errorPositions;
-    Statement const* instruction;
-    for (i = data.constBegin(); i != data.constEnd(); ++i) {
-        lineNo = i.key();
-        line = i.value();
-        instruction = Statement::parse(line);
-        ast += QString("%1 %2\n").arg(lineNo).arg(instruction->ast());
-        if (instruction->error) {
-            errorPositions.append(position + 1);
-        }
-        // length of line number + statement + 1 whitespace + 1 '\0'
-        position += QString::number(lineNo).length() + line.length() + 2;
-    }
-    context->io->setAst(ast);
-    context->io->setErrorLines(errorPositions);
-}
-
 void Program::clear() {
-    data.clear();
+    code.clear();
     context->reset();
 }
 
 void Program::printCode() const {
     QString content;
     QMap<int, QString>::const_iterator i;
-    for (i = data.constBegin(); i != data.constEnd(); ++i) {
+    for (i = code.constBegin(); i != code.constEnd(); ++i) {
         content += QString("%1 %2\n").arg(i.key()).arg(i.value());
     }
     context->io->setCode(content);
+}
+
+void Program::printAst() const {
+    QMap<int, QString>::const_iterator i;
+    QString ast, line;
+    int position = 1, lineNo;
+    QList<int> errorPositions;
+    Statement const* instruction;
+    for (i = code.constBegin(); i != code.constEnd(); ++i) {
+        lineNo = i.key();
+        line = i.value();
+        instruction = Statement::parse(line);
+        ast += lineAst(lineNo, instruction);
+        if (instruction->error) {
+            errorPositions.append(position);
+        }
+        position += lineLength(lineNo, line);
+    }
+    context->io->setAst(ast);
+    context->io->setErrorLines(errorPositions);
+}
+
+void Program::printCurrentAst() const {
+    QMap<int, QString>::const_iterator currentLine = context->pc;
+    if (currentLine == code.end()) {
+        return;
+    }
+    Statement const* instruction = Statement::parse(currentLine.value());
+    context->io->setAst(lineAst(currentLine.key(), instruction));
 }
 
 void Program::printState() const {
@@ -153,6 +200,44 @@ void Program::printState() const {
 
 Runtime* Program::getContext() {
     return context;
+}
+
+void Program::highlightCurrentLine() const {
+    QMap<int, QString>::const_iterator currentLine = context->pc;
+    if (currentLine == code.end()) {
+        return;
+    }
+    context->io->setCurrentLine(linePosition(currentLine));
+}
+
+void Program::enterDebug() {
+    debug = true;
+    emit enteredDebug();
+}
+
+void Program::exitDebug() {
+    debug = false;
+    emit exitedDebug();
+}
+
+inline int Program::lineLength(int lineNo, QString line) const {
+    // length of line number + statement + 1 whitespace + 1 '\0'
+    return QString::number(lineNo).length() + line.length() + 2;
+}
+
+int Program::linePosition(const QMap<int, QString>::const_iterator& line) const {
+    int position = 1, lineNo;
+    QString content;
+    for (QMap<int, QString>::const_iterator i = code.constBegin(); i != line; ++i) {
+        lineNo = i.key();
+        content = i.value();
+        position += lineLength(lineNo, content);
+    }
+    return position;
+}
+
+inline QString Program::lineAst(int lineNo, const Statement* instruction) const {
+    return QString("%1 %2\n").arg(lineNo).arg(instruction->ast());
 }
 
 Program::~Program() {
