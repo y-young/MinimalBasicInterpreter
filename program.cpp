@@ -66,7 +66,7 @@ void Program::stepExecute() {
         instruction->execute(context);
     } catch (Exception* error) {
         context->status = HALT;
-        exitDebug();
+        exitDebug(false);
         error->setContext(QString("%1 %2").arg(lineNo).arg(content));
         context->io->addErrorLine(linePosition(currentLine));
         throw;
@@ -80,13 +80,14 @@ void Program::stepExecute() {
         QMap<int, QString>::const_iterator destination = code.constFind(context->gotoDst);
         if (destination == code.constEnd()) {
             context->io->addErrorLine(linePosition(context->pc - 1));
-            exitDebug();
+            exitDebug(false);
             throw new RuntimeError(QString("Jump destination \"%1\" doesn't exist").arg(context->gotoDst));
         }
         context->pc = destination;
         context->status = OK;
         context->gotoDst = 0;
     }
+    printState();
 }
 
 void Program::run() {
@@ -97,7 +98,9 @@ void Program::run() {
             stepExecute();
         }
     }
-    exitDebug();
+    if (context->status == HALT && debug) {
+        exitDebug();
+    }
 }
 
 void Program::init() {
@@ -128,11 +131,9 @@ void Program::step() {
         }
         if (context->status == HALT) { // Exited normally
             exitDebug();
-            QMessageBox::information(this, "Debug", "Program exited normally.");
             return;
         }
         stepExecute();
-        printState();
     }
     highlightCurrentLine();
     printCurrentAst();
@@ -216,8 +217,11 @@ void Program::enterDebug() {
     emit enteredDebug();
 }
 
-void Program::exitDebug() {
+void Program::exitDebug(bool exitedNormally) {
     debug = false;
+    if (exitedNormally) {
+        QMessageBox::information(this, "Debug", "Program exited normally.");
+    }
     emit exitedDebug();
 }
 

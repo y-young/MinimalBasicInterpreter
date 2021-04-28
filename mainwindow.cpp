@@ -24,7 +24,6 @@ void MainWindow::run() {
     } catch (Exception* error) {
         showErrorMessage(*error);
     }
-    program->printState();
 }
 
 void MainWindow::load() {

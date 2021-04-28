@@ -23,7 +23,7 @@ class Program: public QWidget {
     void init();
     const QPair<int, QString> parseLine(QString line) const;
     void enterDebug();
-    void exitDebug();
+    void exitDebug(bool exitedNormally = true);
     void stepExecute();
     void input(QString identifier, const Value* value);
     void highlightCurrentLine() const;
