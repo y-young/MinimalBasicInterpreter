@@ -5,15 +5,16 @@
 #include <QString>
 
 #include "exceptions.h"
+#include "value.h"
 
 class EvaluationContext {
   private:
-    QMap<QString, int> symbols;
+    QMap<QString, const Value*> symbols;
 
   public:
     EvaluationContext();
-    int getValue(QString identifier) const;
-    void setValue(QString identifier, int value);
+    const Value* getValue(QString identifier) const;
+    void setValue(QString identifier, const Value* value);
     void clear();
     QString toString() const;
 };

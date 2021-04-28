@@ -3,8 +3,8 @@
 EvaluationContext::EvaluationContext() {
 }
 
-int EvaluationContext::getValue(QString identifier) const {
-    QMap<QString, int>::const_iterator result;
+const Value* EvaluationContext::getValue(QString identifier) const {
+    QMap<QString, const Value*>::const_iterator result;
     result = symbols.find(identifier);
     if (result == symbols.end()) {
         throw new RuntimeError("Undefined variable: " + identifier);
@@ -12,7 +12,7 @@ int EvaluationContext::getValue(QString identifier) const {
     return result.value();
 }
 
-void EvaluationContext::setValue(QString identifier, int value) {
+void EvaluationContext::setValue(QString identifier, const Value* value) {
     symbols.insert(identifier, value);
 }
 
@@ -22,9 +22,10 @@ void EvaluationContext::clear() {
 
 QString EvaluationContext::toString() const {
     QString content;
-    QMap<QString, int>::const_iterator i;
+    QMap<QString, const Value*>::const_iterator i;
     for (i = symbols.constBegin(); i != symbols.constEnd(); ++i) {
-        content += QString("%1: INT = %2\n").arg(i.key()).arg(i.value());
+        const Value* value = i.value();
+        content += QString("%1: %2 = %3\n").arg(i.key()).arg(value->type()).arg(value->ast());
     }
     return content;
 }

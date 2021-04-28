@@ -47,19 +47,13 @@ void PseudoIO::finishInput(QString stream) {
         return;
     }
     // Emit signal to program
-    emit receivedInput(awaitingIdentifier, userInput);
+    emit receivedInput(awaitingIdentifier, new IntegerValue(userInput));
     awaitingInput = false;
 }
 
 // Program produced output
-void PseudoIO::output(int value) const {
-    QString content;
-    content.setNum(value);
-    output(content);
-}
-
-void PseudoIO::output(QString content) const {
-    outputDisplay->append(content);
+void PseudoIO::output(const Value* value) const {
+    outputDisplay->append(value->toString());
 }
 
 void PseudoIO::setCode(QString code) {

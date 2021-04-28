@@ -7,6 +7,8 @@
 #include <QString>
 #include <QTextBrowser>
 
+#include "value.h"
+
 const QColor CURRENT_HIGHLIGHT(100, 255, 100), ERROR_HIGHLIGHT(255, 100, 100);
 
 class PseudoIO: public QObject {
@@ -26,8 +28,7 @@ class PseudoIO: public QObject {
     PseudoIO(QTextBrowser* code, QTextBrowser* output, QTextBrowser* ast, QTextBrowser* state, QLineEdit* command);
     void requestInput(QString identifier);
     void finishInput(QString stream);
-    void output(int value) const;
-    void output(QString content) const;
+    void output(const Value* value) const;
     void setCode(QString code);
     void setCurrentLine(int position) const;
     void setErrorLines(const QList<int>& positions);
@@ -42,7 +43,7 @@ class PseudoIO: public QObject {
     void clearHightlights();
 
   signals:
-    void receivedInput(QString identifier, int input);
+    void receivedInput(QString identifier, const Value* input);
     void receivedCommand(QString command);
 };
 

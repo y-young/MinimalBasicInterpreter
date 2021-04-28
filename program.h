@@ -12,6 +12,7 @@
 #include "exceptions.h"
 #include "runtime.h"
 #include "statement.h"
+#include "value.h"
 
 class Program: public QWidget {
     Q_OBJECT
@@ -24,7 +25,7 @@ class Program: public QWidget {
     void enterDebug();
     void exitDebug();
     void stepExecute();
-    void input(QString identifier, int value);
+    void input(QString identifier, const Value* value);
     void highlightCurrentLine() const;
     void printCurrentAst() const;
     inline int lineLength(int lineNo, QString line) const;

@@ -1,7 +1,6 @@
 #include "expression.h"
 
 #include <QDebug>
-#include <QtMath>
 
 Expression::Expression() {
 }
@@ -90,8 +89,8 @@ const Expression* Expression::parse(const QString expression) {
     return operands.pop();
 }
 
-int Expression::evaluate(Runtime*) const {
-    return 0;
+const Value* Expression::evaluate(Runtime*) const {
+    return nullptr;
 }
 
 QString Expression::ast() const {
@@ -114,26 +113,33 @@ Expression::~Expression() {
 }
 
 // ConstantExpression
-ConstantExpression::ConstantExpression(int val): value(val) {
+ConstantExpression::ConstantExpression(const Token* token) {
+    QChar prefix = token->content[0];
+    if (prefix == '"' || prefix == '\'') {
+        value = new StringValue(token->content.section(prefix, 1, 1));
+    } else {
+        value = new IntegerValue(token->content.toInt());
+    }
 }
 
-ConstantExpression::ConstantExpression(const Token* token): value(token->content.toInt()) {
-}
-
-int ConstantExpression::evaluate(Runtime*) const {
+const Value* ConstantExpression::evaluate(Runtime*) const {
     return value;
 }
 
 QString ConstantExpression::ast() const {
-    return QString().setNum(value);
+    return value->ast();
 }
 
 QString ConstantExpression::toString() const {
-    return QString("ConstantExpression(%1)").arg(value);
+    return QString("ConstantExpression(%1)").arg(value->ast());
 }
 
 ExpressionType ConstantExpression::getType() const {
     return CONST_EXP;
+}
+
+ConstantExpression::~ConstantExpression() {
+    delete value;
 }
 
 // IdentifierExpression
@@ -143,7 +149,7 @@ IdentifierExpression::IdentifierExpression(const QString i): identifier(i) {
 IdentifierExpression::IdentifierExpression(const Token* token): identifier(token->content) {
 }
 
-int IdentifierExpression::evaluate(Runtime* context) const {
+const Value* IdentifierExpression::evaluate(Runtime* context) const {
     return context->symbols.getValue(identifier);
 }
 
@@ -168,13 +174,13 @@ CompoundExpression::CompoundExpression(const QString o, const Expression* l, con
     : op(o), lhs(l), rhs(r) {
 }
 
-int CompoundExpression::evaluate(Runtime* context) const {
-    int right = rhs->evaluate(context);
+const Value* CompoundExpression::evaluate(Runtime* context) const {
+    const Value& right = *rhs->evaluate(context);
     if (op == "=") {
-        context->symbols.setValue(lhs->getIdentifierName(), right);
-        return right;
+        context->symbols.setValue(lhs->getIdentifierName(), &right);
+        return &right;
     }
-    int left = lhs->evaluate(context);
+    const Value& left = *lhs->evaluate(context);
     if (op == "+") {
         return left + right;
     }
@@ -185,12 +191,9 @@ int CompoundExpression::evaluate(Runtime* context) const {
         return left * right;
     }
     if (op == "**") {
-        return qPow(left, right);
+        return left.pow(right);
     }
     if (op == "/") {
-        if (right == 0) {
-            throw new RuntimeError("Division by 0");
-        }
         return left / right;
     }
     throw new SyntaxError("Illegal operator in expression");

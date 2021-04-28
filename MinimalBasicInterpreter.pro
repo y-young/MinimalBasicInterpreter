@@ -19,7 +19,8 @@ SOURCES += \
     runtime.cpp \
     statement.cpp \
     tokenizer.cpp \
-    utils.cpp
+    utils.cpp \
+    value.cpp
 
 HEADERS += \
     evaluationcontext.h \
@@ -31,7 +32,8 @@ HEADERS += \
     runtime.h \
     statement.h \
     tokenizer.h \
-    utils.h
+    utils.h \
+    value.h
 
 FORMS += \
     mainwindow.ui

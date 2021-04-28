@@ -8,8 +8,9 @@ Statement::Statement(QString n): name(n) {
 }
 
 Statement* Statement::parse(const QString statement) {
-    QString name = statement.split(' ')[0];
-    QString body = statement.section(' ', 1);
+    QString content = statement.trimmed();
+    QString name = content.split(' ')[0];
+    QString body = content.section(' ', 1);
 
     if (name == "REM") {
         return new RemarkStatement(body);
@@ -94,7 +95,7 @@ PrintStatement::PrintStatement(const QString body) {
 }
 
 void PrintStatement::execute(Runtime* context) const {
-    int value = expression->evaluate(context);
+    const Value* value = expression->evaluate(context);
     context->io->output(value);
 }
 
@@ -183,7 +184,7 @@ IfStatement::IfStatement(const QString body) {
 }
 
 void IfStatement::execute(Runtime* context) const {
-    int left = lhs->evaluate(context), right = rhs->evaluate(context);
+    const Value &left = *lhs->evaluate(context), &right = *rhs->evaluate(context);
     bool shouldJump = (conditionOp == '<' && left < right) || (conditionOp == '=' && left == right) ||
                       (conditionOp == '>' && left > right);
     if (shouldJump) {

@@ -2,7 +2,7 @@
 
 Program::Program(PseudoIO* io) {
     context = new Runtime(io);
-    connect(context->io, &PseudoIO::receivedInput, this, QOverload<QString, int>::of(&Program::input));
+    connect(context->io, &PseudoIO::receivedInput, this, QOverload<QString, const Value*>::of(&Program::input));
 }
 
 const QPair<int, QString> Program::parseLine(QString line) const {
@@ -20,7 +20,7 @@ const QPair<int, QString> Program::parseLine(QString line) const {
         error->setContext(line);
         throw error;
     }
-    QString content = line.simplified().section(' ', 1, -1);
+    QString content = line.trimmed().section(' ', 1, -1);
     return QPair<int, QString>(lineNo, content);
 }
 
@@ -137,7 +137,7 @@ void Program::step() {
     printCurrentAst();
 }
 
-void Program::input(QString identifier, int value) {
+void Program::input(QString identifier, const Value* value) {
     context->symbols.setValue(identifier, value);
     if (context->status != INTERRUPT) { // Not awaiting input
         return;

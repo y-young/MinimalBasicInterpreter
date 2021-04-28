@@ -28,6 +28,7 @@ class Tokenizer {
     void addToken(const Token* token);
     void saveLastToken();
     void handleOperator(QString current);
+    QString simplify(QString str) const;
 
   public:
     Tokenizer(const QString& exp);

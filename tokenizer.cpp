@@ -30,8 +30,7 @@ QList<const Token*>* Tokenizer::tokenize(Exception** error) {
     QChar c;
     int index = 0;
     // remove spaces
-    QString expression = this->expression;
-    expression.replace(QString(' '), QString());
+    QString expression = simplify(this->expression);
     try {
         while (index < expression.length()) {
             c = expression[index];
@@ -70,6 +69,21 @@ QList<const Token*>* Tokenizer::tokenize(Exception** error) {
                 } else {
                     handleOperator(c);
                 }
+            } else if (c == '"' || c == '\'') {
+                int nextIndex = expression.indexOf(c, index + 1);
+                if (nextIndex < 0) {
+                    *error = new SyntaxError("Missing matching quote " + QString(c));
+                    return nullptr;
+                }
+                QString string = expression.mid(index + 1, nextIndex - index - 1);
+                if (string.contains('"') || string.contains('\'')) {
+                    *error = new SyntaxError("Unexpected quote inside string: " + string);
+                    return nullptr;
+                }
+                currentToken = '"' + string + '"';
+                currentTokenType = CONSTANT;
+                saveLastToken();
+                index = nextIndex;
             } else {
                 *error = new SyntaxError("Invalid syntax " + QString(c));
                 return nullptr;
@@ -105,6 +119,27 @@ void Tokenizer::handleOperator(QString current) {
         throw new SyntaxError(QString("Invalid syntax: %1%2").arg(lastToken).arg(current));
     }
     addToken(new Token(OPERATOR, current));
+}
+
+// Remove whitespaces outside string
+QString Tokenizer::simplify(QString str) const {
+    QString result;
+    bool inString = false;
+    QChar quote;
+    for (QChar c : str) {
+        if (c == '"' || c == '\'') {
+            if (!inString) {
+                inString = true;
+                quote = c;
+            } else {
+                inString = false;
+            }
+        }
+        if (inString || !c.isSpace()) {
+            result.append(c);
+        }
+    }
+    return result;
 }
 
 QString Tokenizer::toString() const {
