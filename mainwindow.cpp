@@ -74,6 +74,8 @@ void MainWindow::executeCommand(QString command) {
             run();
         } else if (command == "LOAD") {
             load();
+        } else if (command == "DEBUG" || command == "STEP") {
+            debugStep();
         } else if (command == "CLEAR") {
             clear();
         } else if (command == "HELP") {
