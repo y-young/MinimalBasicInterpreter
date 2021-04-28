@@ -20,6 +20,8 @@ Statement* Statement::parse(const QString statement) {
         return new PrintStatement(body);
     } else if (name == "INPUT") {
         return new InputStatement(body);
+    } else if (name == "INPUTS") {
+        return new InputsStatement(body);
     } else if (name == "GOTO") {
         return new GotoStatement(body);
     } else if (name == "IF") {
@@ -131,6 +133,22 @@ const QString InputStatement::ast() const {
         return "ERROR";
     }
     return QString("INPUT\n    " + identifier);
+}
+
+// INPUTS
+InputsStatement::InputsStatement(const QString body): InputStatement(body) {
+}
+
+void InputsStatement::execute(Runtime* context) const {
+    InputStatement::execute(context);
+    context->io->requestStringInput();
+}
+
+const QString InputsStatement::ast() const {
+    if (error) {
+        return "ERROR";
+    }
+    return QString("INPUTS\n    " + identifier);
 }
 
 // GOTO

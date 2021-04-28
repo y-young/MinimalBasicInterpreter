@@ -112,7 +112,6 @@ void Program::start() {
         printAst();
     }
     run();
-    printState();
 }
 
 void Program::step() {
@@ -138,10 +137,10 @@ void Program::step() {
 }
 
 void Program::input(QString identifier, const Value* value) {
-    context->symbols.setValue(identifier, value);
     if (context->status != INTERRUPT) { // Not awaiting input
         return;
     }
+    context->symbols.setValue(identifier, value);
     context->status = OK;
     try {
         run();

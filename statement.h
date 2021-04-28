@@ -59,11 +59,18 @@ class PrintStatement: public Statement {
 };
 
 class InputStatement: public Statement {
-  private:
+  protected:
     QString identifier;
 
   public:
     InputStatement(const QString body);
+    void execute(Runtime* context) const override;
+    const QString ast() const override;
+};
+
+class InputsStatement: public InputStatement {
+  public:
+    InputsStatement(const QString body);
     void execute(Runtime* context) const override;
     const QString ast() const override;
 };

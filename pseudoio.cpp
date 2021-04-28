@@ -16,6 +16,11 @@ void PseudoIO::requestInput(QString identifier) {
     awaitingIdentifier = identifier;
 }
 
+void PseudoIO::requestStringInput() {
+    awaitingInput = true;
+    stringInput = true;
+}
+
 // User pressed enter in command input box
 void PseudoIO::handleInput() {
     QString stream = commandInput->text();
@@ -37,18 +42,26 @@ void PseudoIO::handleInput() {
 }
 
 // Pass input back to program
-void PseudoIO::finishInput(QString stream) {
-    int userInput;
-    bool ok;
-    userInput = stream.toInt(&ok);
-    if (!ok) {
-        // Invalid input, retry
-        requestInput(awaitingIdentifier);
-        return;
+void PseudoIO::finishInput(QString input) {
+    Value* value = nullptr;
+    if (stringInput) {
+        value = new StringValue(input);
+    } else { // Integer input
+        int inputValue;
+        bool ok;
+        inputValue = input.toInt(&ok);
+        if (!ok) {
+            // Invalid input, retry
+            requestInput(awaitingIdentifier);
+            return;
+        }
+        value = new IntegerValue(inputValue);
     }
-    // Emit signal to program
-    emit receivedInput(awaitingIdentifier, new IntegerValue(userInput));
+    // Concurrency issue: Must reset input state before emitting signal
     awaitingInput = false;
+    stringInput = false;
+    // Emit signal to program
+    emit receivedInput(awaitingIdentifier, value);
 }
 
 // Program produced output

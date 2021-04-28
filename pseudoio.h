@@ -20,6 +20,7 @@ class PseudoIO: public QObject {
     QTextBrowser* stateDisplay = nullptr;
     QLineEdit* commandInput = nullptr;
     bool awaitingInput = false;
+    bool stringInput = false;
     QString awaitingIdentifier;
     QList<QTextEdit::ExtraSelection> errorHighlights;
     void handleInput();
@@ -27,7 +28,8 @@ class PseudoIO: public QObject {
   public:
     PseudoIO(QTextBrowser* code, QTextBrowser* output, QTextBrowser* ast, QTextBrowser* state, QLineEdit* command);
     void requestInput(QString identifier);
-    void finishInput(QString stream);
+    void requestStringInput();
+    void finishInput(QString input);
     void output(const Value* value) const;
     void setCode(QString code);
     void setCurrentLine(int position) const;
