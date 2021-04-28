@@ -48,6 +48,7 @@ void Program::load(QString filename) {
         edit(in.readLine());
     }
     file.close();
+    context->io->clear();
     printCode();
 }
 
