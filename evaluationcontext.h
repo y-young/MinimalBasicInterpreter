@@ -2,12 +2,14 @@
 #define EVALUATIONCONTEXT_H
 
 #include <QMap>
+#include <QObject>
 #include <QString>
 
 #include "exceptions.h"
 #include "value.h"
 
-class EvaluationContext {
+class EvaluationContext: public QObject {
+    Q_OBJECT
   private:
     QMap<QString, const Value*> symbols;
 
@@ -17,6 +19,10 @@ class EvaluationContext {
     void setValue(QString identifier, const Value* value);
     void clear();
     QString toString() const;
+    ~EvaluationContext();
+
+  signals:
+    void contextChanged();
 };
 
 #endif // EVALUATIONCONTEXT_H

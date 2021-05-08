@@ -150,7 +150,7 @@ IdentifierExpression::IdentifierExpression(const Token* token): identifier(token
 }
 
 const Value* IdentifierExpression::evaluate(Runtime* context) const {
-    return context->symbols.getValue(identifier);
+    return context->symbols->getValue(identifier);
 }
 
 QString IdentifierExpression::getIdentifierName() const {
@@ -177,7 +177,7 @@ CompoundExpression::CompoundExpression(const QString o, const Expression* l, con
 const Value* CompoundExpression::evaluate(Runtime* context) const {
     const Value& right = *rhs->evaluate(context);
     if (op == "=") {
-        context->symbols.setValue(lhs->getIdentifierName(), &right);
+        context->symbols->setValue(lhs->getIdentifierName(), &right);
         return &right;
     }
     const Value& left = *lhs->evaluate(context);

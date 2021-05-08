@@ -87,7 +87,6 @@ void Program::stepExecute() {
         context->status = OK;
         context->gotoDst = 0;
     }
-    printState();
 }
 
 void Program::run() {
@@ -107,7 +106,7 @@ void Program::init() {
     if (code.empty()) {
         throw new Exception("No program to run");
     }
-    context->reset();
+    context->init();
     context->pc = code.constBegin();
 }
 
@@ -121,6 +120,7 @@ void Program::start() {
 
 void Program::step() {
     if (!debug) {
+        printAst();
         context->io->clearOutput();
         context->io->clearState();
         init();
@@ -140,13 +140,17 @@ void Program::step() {
 }
 
 void Program::input(QString identifier, const Value* value) {
-    if (context->status != INTERRUPT) { // Not awaiting input
+    context->symbols->setValue(identifier, value);
+    if (context->status != INTERRUPT) { // Program not awaiting input
         return;
     }
-    context->symbols.setValue(identifier, value);
     context->status = OK;
     try {
-        run();
+        if (debug) {
+            step();
+        } else {
+            run();
+        }
     } catch (Exception* error) {
         showErrorMessage(*error);
     }
@@ -193,11 +197,6 @@ void Program::printCurrentAst() const {
     }
     Statement const* instruction = Statement::parse(currentLine.value());
     context->io->setAst(lineAst(currentLine.key(), instruction));
-}
-
-void Program::printState() const {
-    EvaluationContext symbols = context->symbols;
-    context->io->setState(symbols.toString());
 }
 
 Runtime* Program::getContext() {

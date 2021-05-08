@@ -42,7 +42,6 @@ class Program: public QWidget {
     void clear();
     void printCode() const;
     void printAst() const;
-    void printState() const;
     Runtime* getContext();
     ~Program();
 

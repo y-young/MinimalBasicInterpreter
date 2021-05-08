@@ -3,6 +3,9 @@
 EvaluationContext::EvaluationContext() {
 }
 
+EvaluationContext::~EvaluationContext() {
+}
+
 const Value* EvaluationContext::getValue(QString identifier) const {
     QMap<QString, const Value*>::const_iterator result;
     result = symbols.find(identifier);
@@ -14,6 +17,7 @@ const Value* EvaluationContext::getValue(QString identifier) const {
 
 void EvaluationContext::setValue(QString identifier, const Value* value) {
     symbols.insert(identifier, value);
+    emit contextChanged();
 }
 
 void EvaluationContext::clear() {
