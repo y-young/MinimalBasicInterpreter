@@ -18,6 +18,7 @@ void Runtime::init() {
 void Runtime::reset() {
     init();
     symbols->clear();
+    io->reset();
 }
 
 void Runtime::refreshState() {

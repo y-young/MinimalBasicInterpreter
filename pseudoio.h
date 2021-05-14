@@ -44,6 +44,7 @@ class PseudoIO: public QObject {
     void clearInput() const;
     void clearState() const;
     void clearHightlights();
+    void reset();
 
   signals:
     void receivedInput(QString identifier, const Value* input);

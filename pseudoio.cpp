@@ -153,3 +153,8 @@ void PseudoIO::clearHightlights() {
     QList<QTextEdit::ExtraSelection> highlights;
     codeDisplay->setExtraSelections(highlights);
 }
+
+void PseudoIO::reset() {
+    awaitingInput = stringInput = false;
+    commandInput->clear();
+}
