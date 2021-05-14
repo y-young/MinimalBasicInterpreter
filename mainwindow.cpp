@@ -17,8 +17,6 @@ MainWindow::MainWindow(QWidget* parent): QMainWindow(parent), ui(new Ui::MainWin
 }
 
 void MainWindow::run() {
-    io->clearOutput();
-    io->clearState();
     try {
         program->start();
     } catch (Exception* error) {

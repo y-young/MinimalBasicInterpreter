@@ -115,6 +115,8 @@ void Program::init() {
 
 void Program::start() {
     if (!debug) {
+        context->io->clearOutput();
+        context->io->clearState();
         init();
         printAst();
     }
