@@ -25,6 +25,9 @@ const QPair<int, QString> Program::parseLine(QString line) const {
 }
 
 void Program::edit(QString command) {
+    if (command.isEmpty()) { // Ignore empty line
+        return;
+    }
     QPair<int, QString> result = parseLine(command);
     int line = result.first;
     QString content = result.second;

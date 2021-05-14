@@ -61,6 +61,7 @@ class PrintfStatement: public Statement {
     QString formatString;
     QList<const Expression*> args;
     const QString pattern = "{}";
+    QList<QString> getArguments(const QString body) const;
 
   public:
     PrintfStatement(const QString body);

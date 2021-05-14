@@ -125,18 +125,16 @@ void Tokenizer::handleOperator(QString current) {
 QString Tokenizer::simplify(QString str) const {
     QString result;
     bool inString = false;
-    QChar quote;
     for (QChar c : str) {
+        if (!c.isSpace() || inString) {
+            result.append(c);
+        }
         if (c == '"' || c == '\'') {
             if (!inString) {
                 inString = true;
-                quote = c;
             } else {
                 inString = false;
             }
-        }
-        if (inString || !c.isSpace()) {
-            result.append(c);
         }
     }
     return result;

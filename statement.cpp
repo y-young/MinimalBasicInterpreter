@@ -117,7 +117,7 @@ PrintStatement::~PrintStatement() {
 // PRINTF
 
 PrintfStatement::PrintfStatement(const QString body) {
-    QList<QString> arguments = body.trimmed().split(',');
+    QList<QString> arguments = getArguments(body);
     // Parse format string
     if (arguments.size() < 1) {
         error = new SyntaxError("Missing expression for PRINTF statement: " + body);
@@ -173,6 +173,32 @@ const QString PrintfStatement::ast() const {
         astString += indent("\n" + arg->ast());
     }
     return astString;
+}
+
+QList<QString> PrintfStatement::getArguments(const QString body) const {
+    QList<QString> arguments;
+    bool inString = false;
+    QString current;
+    for (QChar c : body) {
+        // Don't treat commas inside strings as arguments delimiter
+        if (c == ',' && !inString) {
+            arguments.append(current);
+            current.clear();
+        } else {
+            current.append(c);
+        }
+        if (c == '"' || c == '\'') {
+            if (inString) {
+                inString = false;
+            } else {
+                inString = true;
+            }
+        }
+    }
+    if (!current.isEmpty()) {
+        arguments.append(current);
+    }
+    return arguments;
 }
 
 PrintfStatement::~PrintfStatement() {
